@@ -1,0 +1,9 @@
+#!/bin/sh
+# Tự động đồng bộ tài liệu Markdown từ toàn bộ mã nguồn backend trước mỗi lần commit.
+# Kích hoạt một lần sau khi `git init`: git config core.hooksPath .githooks
+
+if command -v java >/dev/null 2>&1; then
+    java scripts/SyncDocs.java
+    git add PROJECT_SPEC.md ENTITY_SCHEMA.md 2>/dev/null || true
+fi
+
