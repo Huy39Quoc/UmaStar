@@ -68,6 +68,8 @@
 |---|---|---|---|
 | `umastar` | `class` | [`UmaStarApplication`](src/main/java/umastar/UmaStarApplication.java) | `@SpringBootApplication` |
 | `umastar.config` | `class` | [`OpenApiConfig`](src/main/java/umastar/config/OpenApiConfig.java) | `@Configuration` |
+| `umastar.config` | `class` | [`SecurityConfig`](src/main/java/umastar/config/SecurityConfig.java) | Cau hinh bao mat cho API (dung JWT stateless, khong dung session/form login). |
+| `umastar.dto.response` | `record` | [`ErrorResponse`](src/main/java/umastar/dto/response/ErrorResponse.java) | - |
 | `umastar.entity` | `class` | [`BaseEntity`](src/main/java/umastar/entity/BaseEntity.java) | `@MappedSuperclass`, `@Getter`, `@Setter` |
 | `umastar.entity` | `class` | [`City`](src/main/java/umastar/entity/City.java) | `@Entity`, `@Table`, `@Getter @Setter @NoArgsConstructor` |
 | `umastar.entity` | `class` | [`Country`](src/main/java/umastar/entity/Country.java) | Danh mục quốc gia. - homeCountry = true : nước sở tại (Việt Nam) -> dùng cho đơn NỘI ĐỊA - partner = true : nước đã hợp tác -> dùng cho đơn QUỐC TẾ |
@@ -113,6 +115,9 @@
 | `umastar.enums` | `enum` | [`UserStatus`](src/main/java/umastar/enums/UserStatus.java) | - |
 | `umastar.enums` | `enum` | [`VehicleStatus`](src/main/java/umastar/enums/VehicleStatus.java) | - |
 | `umastar.enums` | `enum` | [`VehicleType`](src/main/java/umastar/enums/VehicleType.java) | - |
+| `umastar.exception` | `class` | [`ApiException`](src/main/java/umastar/exception/ApiException.java) | Loi nghiep vu chung cho toan bo Service. Khi can bao loi ve Client, chi can throw: throw new ApiException(ErrorCode.FORBIDDEN); hoac throw ApiException.notFound("Order", id); |
+| `umastar.exception` | `enum` | [`ErrorCode`](src/main/java/umastar/exception/ErrorCode.java) | Danh sach ma loi chuan cua API kem HTTP status va thong bao mac dinh (tieng Anh). |
+| `umastar.exception` | `class` | [`GlobalExceptionHandler`](src/main/java/umastar/exception/GlobalExceptionHandler.java) | Bo hung loi tap trung cho toan bo Controller. Moi loi phat sinh se duoc doi thanh JSON ErrorResponse thong nhat. |
 
 ### API Endpoints (Controllers)
 

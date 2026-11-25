@@ -12,7 +12,7 @@ Tài liệu theo dõi tiến độ triển khai Backend theo thứ tự ưu tiê
 | [x] | Đồng bộ package & cấu hình Postgres + Swagger | `umastar.*`, PostgreSQL (`umastar_db`), SpringDoc `3.2.1` |
 | [x] | Cấu hình `.env` & `.env.example` không hardcode | `spring.config.import=optional:file:.env[.properties]` |
 | [x] | Bổ sung Optimistic Locking & field còn thiếu trên Entity | `@Version` (`TransportOrder`, `Trip`, `Vehicle`, `LegalDocument`), `Trip.confirmed`/`confirmedAt`, `HorseConditionLog.photoUrls` |
-| [ ] | Thêm `spring-boot-starter-security` + thư viện JWT vào `pom.xml` | Khai báo thêm `JWT_SECRET`, `JWT_ACCESS_EXP_MS`, `JWT_REFRESH_EXP_MS`, `UPLOAD_DIR` trong `.env` & `.env.example` |
+| [x] | Thêm `spring-boot-starter-security` + thư viện JWT vào `pom.xml` | Khai báo thêm `JWT_SECRET`, `JWT_ACCESS_EXP_MS`, `JWT_REFRESH_EXP_MS`, `UPLOAD_DIR`, `MAX_FILE_SIZE`, `MAX_REQUEST_SIZE` trong `.env` & `.env.example` |
 
 ---
 
@@ -147,6 +147,6 @@ Tài liệu theo dõi tiến độ triển khai Backend theo thứ tự ưu tiê
 <!-- AUTO-GENERATED-PROGRESS:START -->
 > Tự động cập nhật bởi `java scripts/SyncDocs.java`.
 
-- **Tiến độ checklist:** `3/62` hạng mục (5%)
+- **Tiến độ checklist:** `4/62` hạng mục (6%)
 - **Thành phần đã có trong code:** `0` Controllers (`0` endpoints), `0` Services, `0` Repositories
 <!-- AUTO-GENERATED-PROGRESS:END -->

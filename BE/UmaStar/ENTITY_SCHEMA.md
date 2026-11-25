@@ -319,7 +319,7 @@ Thông báo gửi tới người dùng (nhắc bổ sung hồ sơ, cập nhật 
 > Phần dưới đây được đồng bộ tự động từ toàn bộ mã nguồn Java bằng lệnh `java scripts/SyncDocs.java`. Không sửa tay trong khối `AUTO-GENERATED`.
 
 <!-- AUTO-GENERATED:START -->
-Cập nhật từ toàn bộ mã nguồn: `src/main/java/umastar/**` (`22` entities/superclasses, `23` enums).
+Cập nhật từ toàn bộ mã nguồn: `src/main/java/umastar/**` (`22` entities/superclasses, `24` enums).
 
 ### Danh sách Entity
 
@@ -641,6 +641,7 @@ Cập nhật từ toàn bộ mã nguồn: `src/main/java/umastar/**` (`22` entit
 | `ChangeRequestStatus` | `PENDING`, `APPROVED`, `REJECTED` |
 | `CustomerType` | `CLUB`, `INDIVIDUAL` |
 | `DocType` | `VACCINATION_CERT`, `HORSE_PASSPORT`, `EXPORT_PERMIT`, `IMPORT_PERMIT`, `HEALTH_CERT`, `OTHER` |
+| `ErrorCode` | `VALIDATION_FAILED`, `"Validation`, `MALFORMED_REQUEST`, `"Malformed`, `UNAUTHORIZED`, `"Authentication`, `INVALID_CREDENTIALS`, `"Invalid`, `TOKEN_INVALID`, `"Invalid`, `TOKEN_EXPIRED`, `"Token`, `FORBIDDEN`, `"You`, `ACCOUNT_LOCKED`, `"Account`, `ACCOUNT_DISABLED`, `"Account`, `RESOURCE_NOT_FOUND`, `"Resource`, `CONFLICT`, `"Data`, `DUPLICATE_RESOURCE`, `"Resource`, `INVALID_STATE_TRANSITION`, `"Invalid`, `CONCURRENT_UPDATE`, `"Resource`, `please`, `FILE_TOO_LARGE`, `"File`, `UNSUPPORTED_FILE_TYPE`, `"Unsupported`, `BUSINESS_RULE_VIOLATION`, `"Business`, `TOO_MANY_REQUESTS`, `"Too`, `please`, `INTERNAL_ERROR`, `"Internal` |
 | `HorseCondition` | `STABLE`, `NOT_EATING`, `STRESSED`, `CLIMATE_CHANGE` |
 | `HorseSex` | `STALLION`, `MARE`, `GELDING`, `COLT`, `FILLY` |
 | `IncidentStatus` | `OPEN`, `HANDLING`, `RESOLVED` |
