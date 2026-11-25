@@ -2,7 +2,6 @@ package umastar.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import java.math.BigDecimal;
 import java.time.*;
 import java.util.*;
 import umastar.enums.*;
@@ -30,8 +29,12 @@ public class HorseConditionLog extends BaseEntity {
     @Column(columnDefinition = "text")
     private String note;
 
+    /** Danh sách ảnh tình trạng ngựa (tối đa 5 ảnh). */
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "horse_condition_photos",
+            joinColumns = @JoinColumn(name = "log_id"))
     @Column(name = "photo_url", length = 500)
-    private String photoUrl;
+    private List<String> photoUrls = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "recorded_by", nullable = false)

@@ -2,10 +2,8 @@ package umastar.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import java.math.BigDecimal;
 import java.time.*;
 import java.util.*;
-import umastar.enums.*;
 
 /**
  * Refresh token (rotation). Chỉ lưu HASH (SHA-256) của token, không lưu token thô.

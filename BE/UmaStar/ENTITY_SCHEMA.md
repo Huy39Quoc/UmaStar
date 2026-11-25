@@ -168,6 +168,7 @@ Hồ sơ ngựa đua thuộc sở hữu của khách hàng. Quan hệ **N-1** v�
 - `status` (`OrderStatus`): Vòng đời đơn (`PENDING` -> `APPROVED`/`REJECTED` -> `DOC_PROCESSING` -> `READY` -> `IN_TRANSIT` -> `DELIVERED` -> `COMPLETED` / `CANCELLED`).
 - `rejectReason`, `approvedBy`, `approvedAt`: Lý do từ chối hoặc thông tin người/thời điểm duyệt đơn.
 - `orderHorses`: Danh sách ngựa tham gia đơn hàng.
+- `version`: Số phiên bản Optimistic Locking (`@Version`) chống ghi đè đồng thời.
 
 ### `OrderHorse` (Bảng `order_horses`)
 Bảng trung gian N-N giữa `TransportOrder` và `Horse` (unique theo `order_id + horse_id`).
@@ -190,6 +191,7 @@ Hồ sơ pháp lý số hóa cho **từng con ngựa trong từng đơn hàng**.
 - `approvalStatus` (`approval_status`, `ApprovalStatus`): Tiến độ (`MISSING`, `SUBMITTED`, `UNDER_REVIEW`, `APPROVED`, `REJECTED`).
 - `rejectReason` (`reject_reason`): Lý do bị từ chối để khách hàng bổ sung lại.
 - `submittedAt`, `approvedAt`: Mốc thời gian nộp và được duyệt.
+- `version`: Số phiên bản Optimistic Locking (`@Version`) chống ghi đè đồng thời.
 
 ---
 
@@ -202,6 +204,7 @@ Danh mục phương tiện / thiết bị chuyên dụng chở ngựa.
 - `capacityHorses` (`capacity_horses`): Sức chứa tối đa (số ngựa).
 - `carrierName` (`carrier_name`): Tên nhà xe hoặc hãng hàng không sở hữu/khai thác.
 - `status` (`VehicleStatus`): Tình trạng (`AVAILABLE`, `IN_USE`, `MAINTENANCE`).
+- `version`: Số phiên bản Optimistic Locking (`@Version`) chống ghi đè đồng thời.
 
 ### `Trip` (Bảng `trips`)
 Một chặng vận chuyển thực tế thuộc `TransportOrder` (một đơn quốc tế có thể gồm nhiều `Trip` theo thứ tự `sequenceNo`). Quan hệ **N-1** với `TransportOrder`, `Vehicle`, `User` (`plannedBy`, `coordinator`); **1-N** với `TripStop`, `TripAssignment`.
@@ -212,11 +215,13 @@ Một chặng vận chuyển thực tế thuộc `TransportOrder` (một đơn q
 - `plannedStart`, `plannedEnd`: Thời gian bắt đầu và kết thúc dự kiến (cơ sở tính On-time delivery).
 - `actualStart`, `actualEnd`: Thời gian bắt đầu và kết thúc thực tế.
 - `status` (`TripStatus`): `PLANNED`, `DEPARTED`, `IN_TRANSIT`, `DELIVERED`, `CANCELLED`.
+- `confirmed`, `confirmedAt`: Cờ xác nhận kế hoạch chuyến đi đã sẵn sàng xuất phát (`POST /trips/{id}/confirm`) và thời điểm xác nhận.
 - `plannedBy` (`planned_by`): Người lập kế hoạch (Logistics Manager).
 - `coordinator`: Điều phối viên phụ trách chính.
 - `currentLat`, `currentLng`, `lastLocationAt`: Tọa độ GPS mới nhất và thời điểm cập nhật vị trí.
 - `stops`: Danh sách điểm dừng sắp theo `sequenceNo ASC`.
 - `assignments`: Danh sách nhân sự được phân công.
+- `version`: Số phiên bản Optimistic Locking (`@Version`) chống ghi đè đồng thời.
 
 ### `TripStop` (Bảng `trip_stops`)
 Các điểm mốc trên lộ trình của một `Trip` (unique theo `trip_id + sequence_no`). Quan hệ **N-1** với `Trip` và `City`.
@@ -260,7 +265,7 @@ Nhật ký sức khỏe từng con ngựa trong suốt chuyến đi. Quan hệ *
 - `trip`, `horse`: Chuyến đi và con ngựa được theo dõi.
 - `condition` (`horse_condition`, `HorseCondition`): Trạng thái (`STABLE`, `NOT_EATING`, `STRESSED`, `CLIMATE_CHANGE`).
 - `note`: Mô tả chi tiết của tài xế/nhân viên đi kèm.
-- `photoUrl` (`photo_url`): Ảnh tình trạng ngựa.
+- `photoUrls` (`horse_condition_photos`): Danh sách URL ảnh tình trạng ngựa (tối đa 5 ảnh).
 - `recordedBy` (`recorded_by`), `recordedAt` (`recorded_at`): Người ghi nhận và thời điểm.
 
 ### `Incident` (Bảng `incidents`)
@@ -396,7 +401,7 @@ Cập nhật từ toàn bộ mã nguồn: `src/main/java/umastar/**` (`22` entit
 | `horse` | `Horse` | @ManyToOne(fetch = FetchType.LAZY, optional = false) @JoinColumn(name = "horse_id", nul... |
 | `condition` | `HorseCondition` | @Enumerated(EnumType.STRING) @Column(name = "horse_condition", nullable = false, length... |
 | `note` | `String` | @Column(columnDefinition = "text") |
-| `photoUrl` | `String` | @Column(name = "photo_url", length = 500) |
+| `photoUrls` | `List<String>` | @Column(name = "photo_url", length = 500) |
 | `recordedBy` | `User` | @ManyToOne(fetch = FetchType.LAZY, optional = false) @JoinColumn(name = "recorded_by", ... |
 | `recordedAt` | `Instant` | @Column(name = "recorded_at", nullable = false) |
 
@@ -437,6 +442,7 @@ Cập nhật từ toàn bộ mã nguồn: `src/main/java/umastar/**` (`22` entit
 | `rejectReason` | `String` | @Column(name = "reject_reason", columnDefinition = "text") |
 | `submittedAt` | `Instant` | @Column(name = "submitted_at") |
 | `approvedAt` | `Instant` | @Column(name = "approved_at") |
+| `version` | `Long` | @Version |
 
 #### `Notification` — Bảng: `notifications`
 | Field | Kiểu | Ghi chú / Annotation |
@@ -536,6 +542,7 @@ Cập nhật từ toàn bộ mã nguồn: `src/main/java/umastar/**` (`22` entit
 | `approvedBy` | `User` | @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "approved_by") |
 | `approvedAt` | `Instant` | @Column(name = "approved_at") |
 | `orderHorses` | `List<OrderHorse>` | @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true) |
+| `version` | `Long` | @Version |
 
 #### `Trip` — Bảng: `trips`
 | Field | Kiểu | Ghi chú / Annotation |
@@ -549,6 +556,8 @@ Cập nhật từ toàn bộ mã nguồn: `src/main/java/umastar/**` (`22` entit
 | `actualStart` | `Instant` | @Column(name = "actual_start") |
 | `actualEnd` | `Instant` | @Column(name = "actual_end") |
 | `status` | `TripStatus` | @Enumerated(EnumType.STRING) @Column(nullable = false, length = 20) |
+| `confirmed` | `boolean` | @Column(nullable = false) |
+| `confirmedAt` | `Instant` | @Column(name = "confirmed_at") |
 | `plannedBy` | `User` | @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "planned_by") |
 | `coordinator` | `User` | @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "coordinator_id") |
 | `currentLat` | `Double` | @Column(name = "current_lat") |
@@ -556,6 +565,7 @@ Cập nhật từ toàn bộ mã nguồn: `src/main/java/umastar/**` (`22` entit
 | `lastLocationAt` | `Instant` | @Column(name = "last_location_at") |
 | `stops` | `List<TripStop>` | @OneToMany(mappedBy = "trip", cascade = CascadeType.ALL, orphanRemoval = true) @OrderBy... |
 | `assignments` | `List<TripAssignment>` | @OneToMany(mappedBy = "trip", cascade = CascadeType.ALL, orphanRemoval = true) |
+| `version` | `Long` | @Version |
 
 #### `TripAssignment` — Bảng: `trip_assignments`
 | Field | Kiểu | Ghi chú / Annotation |
@@ -620,6 +630,7 @@ Cập nhật từ toàn bộ mã nguồn: `src/main/java/umastar/**` (`22` entit
 | `capacityHorses` | `int` | @Column(name = "capacity_horses", nullable = false) |
 | `carrierName` | `String` | @Column(name = "carrier_name", length = 200) |
 | `status` | `VehicleStatus` | @Enumerated(EnumType.STRING) @Column(nullable = false, length = 20) |
+| `version` | `Long` | @Version |
 
 ### Danh sách Enum
 

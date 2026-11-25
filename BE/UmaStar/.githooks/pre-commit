@@ -4,6 +4,6 @@
 
 if command -v java >/dev/null 2>&1; then
     java scripts/SyncDocs.java
-    git add PROJECT_SPEC.md ENTITY_SCHEMA.md 2>/dev/null || true
+    git add PROJECT_SPEC.md ENTITY_SCHEMA.md BACKEND_ROADMAP.md 2>/dev/null || true
 fi
 

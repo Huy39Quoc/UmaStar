@@ -2,7 +2,6 @@ package umastar.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import java.math.BigDecimal;
 import java.time.*;
 import java.util.*;
 import umastar.enums.*;

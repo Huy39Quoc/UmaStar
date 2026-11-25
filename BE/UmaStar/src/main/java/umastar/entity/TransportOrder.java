@@ -94,4 +94,7 @@ public class TransportOrder extends BaseEntity {
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderHorse> orderHorses = new ArrayList<>();
+
+    @Version
+    private Long version;
 }

@@ -7,7 +7,7 @@
 1. **Logistics Manager** (Quản lý Điều hành Logistics)
 2. **Transport Specialist** (Chuyên viên Thủ tục & Kiểm dịch)
 3. **Fleet & Route Coordinator** (Điều phối viên Đội xe & Lộ trình)
-4. **Vehicle Driver / Escort** (Tài xế / Nhân viên đi kèm)
+4. **Vehicle Driver / Escort** — tách thành 2 role trong hệ thống: **Driver** (Tài xế) và **Escort** (Nhân viên đi kèm)
 5. **Customer** (Khách hàng - CLB / Chủ ngựa)
 
 ---

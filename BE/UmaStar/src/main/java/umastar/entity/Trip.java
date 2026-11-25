@@ -2,7 +2,6 @@ package umastar.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import java.math.BigDecimal;
 import java.time.*;
 import java.util.*;
 import umastar.enums.*;
@@ -48,6 +47,12 @@ public class Trip extends BaseEntity {
     @Column(nullable = false, length = 20)
     private TripStatus status = TripStatus.PLANNED;
 
+    @Column(nullable = false)
+    private boolean confirmed = false;
+
+    @Column(name = "confirmed_at")
+    private Instant confirmedAt;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "planned_by")
     private User plannedBy;
@@ -71,4 +76,7 @@ public class Trip extends BaseEntity {
 
     @OneToMany(mappedBy = "trip", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TripAssignment> assignments = new ArrayList<>();
+
+    @Version
+    private Long version;
 }

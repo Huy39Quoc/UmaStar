@@ -2,9 +2,6 @@ package umastar.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import java.math.BigDecimal;
-import java.time.*;
-import java.util.*;
 import umastar.enums.*;
 
 @Entity
@@ -28,4 +25,7 @@ public class Vehicle extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private VehicleStatus status = VehicleStatus.AVAILABLE;
+
+    @Version
+    private Long version;
 }

@@ -8,8 +8,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * T\u1ef1 \u0111\u1ed9ng qu\u00e9t to\u00e0n b\u1ed9 th\u01b0 m\u1ee5c/file trong Backend (src/main/java, src/main/resources, .env.example)
- * v\u00e0 c\u1eadp nh\u1eadt kh\u1ed1i AUTO-GENERATED trong PROJECT_SPEC.md & ENTITY_SCHEMA.md.
+ * T\u1ef1 \u0111\u1ed9ng qu\u00e9t to\u00e0n b\u1ed9 th\u01b0 m\u1ee5c/file trong Backend (src/main/java, src/main/resources)
+ * v\u00e0 c\u1eadp nh\u1eadt kh\u1ed1i AUTO-GENERATED trong PROJECT_SPEC.md, ENTITY_SCHEMA.md & BACKEND_ROADMAP.md.
  *
  * Ch\u1ea1y: java scripts/SyncDocs.java
  */
@@ -20,6 +20,7 @@ public class SyncDocs {
     private static final Path RESOURCES_ROOT = ROOT.resolve("src/main/resources");
     private static final Path PROJECT_SPEC = ROOT.resolve("PROJECT_SPEC.md");
     private static final Path ENTITY_SCHEMA = ROOT.resolve("ENTITY_SCHEMA.md");
+    private static final Path BACKEND_ROADMAP = ROOT.resolve("BACKEND_ROADMAP.md");
 
     private static final Pattern PACKAGE_PATTERN = Pattern.compile("^\\s*package\\s+([\\w.]+)\\s*;", Pattern.MULTILINE);
     private static final Pattern TYPE_DECL_PATTERN = Pattern.compile(
@@ -34,6 +35,7 @@ public class SyncDocs {
     private static final Pattern QUOTED_STRING = Pattern.compile("\"([^\"]*)\"");
     private static final Pattern PUBLIC_METHOD_PATTERN = Pattern.compile(
             "^public\\s+(?:static\\s+)?([\\w<>\\[\\],.?\\s]+?)\\s+(\\w+)\\s*\\(([^)]*)\\)");
+    private static final Pattern CHECKBOX_PATTERN = Pattern.compile("(?m)^\\|\\s*\\[([ xX])]\\s*\\|");
 
     public static void main(String[] args) throws IOException {
         if (!Files.exists(JAVA_ROOT)) {
@@ -44,6 +46,7 @@ public class SyncDocs {
         List<JavaFileInfo> allJava = scanAllJavaFiles();
         syncProjectSpec(allJava);
         syncEntitySchema(allJava);
+        syncBackendRoadmap(allJava);
     }
 
     private static List<JavaFileInfo> scanAllJavaFiles() throws IOException {
@@ -92,7 +95,6 @@ public class SyncDocs {
         StringBuilder sb = new StringBuilder();
         sb.append("> Ph\u1ea7n n\u00e0y \u0111\u01b0\u1ee3c t\u1ef1 \u0111\u1ed9ng sinh t\u1eeb to\u00e0n b\u1ed9 m\u00e3 ngu\u1ed3n trong `src/main/java/umastar/**` v\u00e0 `src/main/resources/**` b\u1eb1ng `java scripts/SyncDocs.java`.\n\n");
 
-        // 1. Package & File Inventory (grouped dynamically by package)
         sb.append("### Ki\u1ebfn tr\u00fac Package & File hi\u1ec7n c\u00f3\n\n");
         Map<String, List<JavaFileInfo>> byPackage = allJava.stream()
                 .collect(Collectors.groupingBy(f -> f.pkg, TreeMap::new, Collectors.toList()));
@@ -109,10 +111,7 @@ public class SyncDocs {
         }
         sb.append("\n");
 
-        // 2. REST Controllers & Endpoints
-        List<JavaFileInfo> controllers = allJava.stream()
-                .filter(f -> f.hasAnnotation("@RestController") || f.hasAnnotation("@Controller"))
-                .toList();
+        List<JavaFileInfo> controllers = findControllers(allJava);
         sb.append("### API Endpoints (Controllers)\n\n");
         if (controllers.isEmpty()) {
             sb.append("_Ch\u01b0a c\u00f3 Controller n\u00e0o trong m\u00e3 ngu\u1ed3n._\n\n");
@@ -129,10 +128,7 @@ public class SyncDocs {
             sb.append("\n");
         }
 
-        // 3. Services / Business Logic
-        List<JavaFileInfo> services = allJava.stream()
-                .filter(f -> f.hasAnnotation("@Service") || f.pkg.contains(".service"))
-                .toList();
+        List<JavaFileInfo> services = findServices(allJava);
         sb.append("### Business Services\n\n");
         if (services.isEmpty()) {
             sb.append("_Ch\u01b0a c\u00f3 Service n\u00e0o trong m\u00e3 ngu\u1ed3n._\n\n");
@@ -150,10 +146,7 @@ public class SyncDocs {
             sb.append("\n");
         }
 
-        // 4. Repositories
-        List<JavaFileInfo> repos = allJava.stream()
-                .filter(f -> f.pkg.contains(".repository") || f.content.contains("Repository<"))
-                .toList();
+        List<JavaFileInfo> repos = findRepositories(allJava);
         sb.append("### Repositories\n\n");
         if (repos.isEmpty()) {
             sb.append("_Ch\u01b0a c\u00f3 Repository n\u00e0o trong m\u00e3 ngu\u1ed3n._\n\n");
@@ -164,7 +157,6 @@ public class SyncDocs {
             sb.append("\n");
         }
 
-        // 5. Resources & Config files
         sb.append("### Resources & C\u1ea5u h\u00ecnh\n\n");
         if (Files.exists(RESOURCES_ROOT)) {
             try (Stream<Path> stream = Files.walk(RESOURCES_ROOT)) {
@@ -226,6 +218,67 @@ public class SyncDocs {
         }
 
         replaceMarkerBlock(ENTITY_SCHEMA, "<!-- AUTO-GENERATED:START -->", "<!-- AUTO-GENERATED:END -->", sb.toString().trim());
+    }
+
+    private static void syncBackendRoadmap(List<JavaFileInfo> allJava) throws IOException {
+        if (!Files.exists(BACKEND_ROADMAP)) return;
+
+        String raw = Files.readString(BACKEND_ROADMAP, StandardCharsets.UTF_8);
+        Matcher cm = CHECKBOX_PATTERN.matcher(raw);
+        int done = 0;
+        int total = 0;
+        while (cm.find()) {
+            total++;
+            if ("x".equalsIgnoreCase(cm.group(1))) {
+                done++;
+            }
+        }
+        int percent = total == 0 ? 0 : (int) Math.round(done * 100.0 / total);
+
+        List<JavaFileInfo> controllers = findControllers(allJava);
+        List<JavaFileInfo> services = findServices(allJava);
+        List<JavaFileInfo> repos = findRepositories(allJava);
+        int endpointCount = controllers.stream().mapToInt(c -> extractEndpoints(c).size()).sum();
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("> T\u1ef1 \u0111\u1ed9ng c\u1eadp nh\u1eadt b\u1edfi `java scripts/SyncDocs.java`.\n\n");
+        sb.append("- **Ti\u1ebfn \u0111\u1ed9 checklist:** `").append(done).append("/").append(total).append("` h\u1ea1ng m\u1ee5c (").append(percent).append("%)\n");
+        sb.append("- **Th\u00e0nh ph\u1ea7n \u0111\u00e3 c\u00f3 trong code:** `")
+                .append(controllers.size()).append("` Controllers (`").append(endpointCount).append("` endpoints), `")
+                .append(services.size()).append("` Services, `")
+                .append(repos.size()).append("` Repositories\n\n");
+
+        if (!controllers.isEmpty()) {
+            sb.append("### Endpoints \u0111\u00e3 tri\u1ec3n khai\n\n");
+            sb.append("| Controller | Method | Path | Handler |\n");
+            sb.append("|---|---|---|---|\n");
+            for (JavaFileInfo ctrl : controllers) {
+                for (EndpointInfo ep : extractEndpoints(ctrl)) {
+                    sb.append("| `").append(ctrl.name).append("` | `").append(ep.httpMethod).append("` | `")
+                            .append(ep.path).append("` | `").append(ep.handler).append("` |\n");
+                }
+            }
+        }
+
+        replaceMarkerBlock(BACKEND_ROADMAP, "<!-- AUTO-GENERATED-PROGRESS:START -->", "<!-- AUTO-GENERATED-PROGRESS:END -->", sb.toString().trim());
+    }
+
+    private static List<JavaFileInfo> findControllers(List<JavaFileInfo> allJava) {
+        return allJava.stream()
+                .filter(f -> f.hasAnnotation("@RestController") || f.hasAnnotation("@Controller"))
+                .toList();
+    }
+
+    private static List<JavaFileInfo> findServices(List<JavaFileInfo> allJava) {
+        return allJava.stream()
+                .filter(f -> f.hasAnnotation("@Service") || (f.pkg.contains(".service") && !"interface".equals(f.kind)))
+                .toList();
+    }
+
+    private static List<JavaFileInfo> findRepositories(List<JavaFileInfo> allJava) {
+        return allJava.stream()
+                .filter(f -> f.pkg.contains(".repository") || f.content.contains("Repository<"))
+                .toList();
     }
 
     private static void replaceMarkerBlock(Path mdFile, String startMarker, String endMarker, String newBody) throws IOException {
