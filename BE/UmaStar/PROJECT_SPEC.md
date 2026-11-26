@@ -67,8 +67,11 @@
 | Package | Loại | Tên | Mô tả |
 |---|---|---|---|
 | `umastar` | `class` | [`UmaStarApplication`](src/main/java/umastar/UmaStarApplication.java) | `@SpringBootApplication` |
+| `umastar.config` | `class` | [`CorsConfig`](src/main/java/umastar/config/CorsConfig.java) | CORS cho phep frontend (trinh duyet) goi API. Chi cac origin liet ke trong CORS_ALLOWED_ORIGINS (cach nhau bang dau phay) moi duoc phep; de trong nghia la tu choi moi origin. Khong cho dung " " va khong bat allowCredentials: xac thuc bang header Authorization (Bearer), khong phu thuoc cookie nen khong can. |
+| `umastar.config` | `class` | [`DataSeeder`](src/main/java/umastar/config/DataSeeder.java) | Tao tai khoan mac dinh cho tung Role tu .env khi he thong chua co user nao thuoc role do. - Moi role chi seed neu duoc cau hinh du email & password trong .env (de trong se tu bo qua). - Rieng role CUSTOMER se tao kem ho so Customer (1-1) de dat don/them ngua duoc ngay. - An toan khi khoi dong lai: da co user cua role do thi bo qua. Khong ghi mat khau ra log. |
 | `umastar.config` | `class` | [`OpenApiConfig`](src/main/java/umastar/config/OpenApiConfig.java) | `@Configuration` |
 | `umastar.config` | `class` | [`SecurityConfig`](src/main/java/umastar/config/SecurityConfig.java) | Cau hinh Spring Security (stateless JWT, mo Swagger/Auth, tra JSON cho 401/403). |
+| `umastar.config` | `class` | [`SeedProperties`](src/main/java/umastar/config/SeedProperties.java) | Cau hinh danh sach tai khoan seed theo tung Role tu application.properties / .env. |
 | `umastar.dto.response` | `record` | [`ErrorResponse`](src/main/java/umastar/dto/response/ErrorResponse.java) | - |
 | `umastar.dto.response` | `record` | [`PageResponse`](src/main/java/umastar/dto/response/PageResponse.java) | - |
 | `umastar.entity` | `class` | [`BaseEntity`](src/main/java/umastar/entity/BaseEntity.java) | `@MappedSuperclass`, `@Getter`, `@Setter` |
@@ -118,11 +121,12 @@
 | `umastar.exception` | `class` | [`AppException`](src/main/java/umastar/exception/AppException.java) | Loi nghiep vu co kiem soat. Dung: throw new AppException(ErrorCode.HORSE_NOT_FOUND); throw new AppException(ErrorCode.BUSINESS_RULE_VIOLATION, "Ngày khởi hành phải sau hôm nay ít nhất 14 ngày"); Ban thong bao rieng chi dung khi can chi tiet dong, con lai dung message mac dinh cua ErrorCode. |
 | `umastar.exception` | `enum` | [`ErrorCode`](src/main/java/umastar/exception/ErrorCode.java) | Ma loi thong nhat. Moi loi gom: ma so (code), thong bao hien thi cho nguoi dung, HTTP status. QUY UOC DAI MA (moi nhom 100 so, khong de trung): 100 AUTH \| 200 TOKEN \| 300 USER \| 400 PASSWORD \| 500 FILE \| 600 SYSTEM 700 MASTER DATA (Country, City) \| 800 VEHICLE \| 900 REGULATION 1000 CUSTOMER \| 1100 HORSE \| 1200 NOTIFICATION (du kien) 1300 ORDER \| 1400 LEGAL_DOCUMENT \| 1500 TRIP \| 1600 TRIP_STOP, ASSIGNMENT 1700 INCIDENT, ROUTE_CHANGE \| 1800 HANDOVER \| 1900 REPORT Them loi moi: chon so tiep theo trong dung nhom. ErrorCodeTest se bao loi neu bi trung so. |
 | `umastar.exception` | `class` | [`GlobalExceptionHandler`](src/main/java/umastar/exception/GlobalExceptionHandler.java) | Bo hung loi tap trung. Moi loi -> ErrorResponse thong nhat. Quy tac: loi cua client (4xx) khong log stack trace; loi he thong (5xx) luon log day du. |
+| `umastar.repository` | `interface` | [`CustomerRepository`](src/main/java/umastar/repository/CustomerRepository.java) | - |
 | `umastar.repository` | `interface` | [`RefreshTokenRepository`](src/main/java/umastar/repository/RefreshTokenRepository.java) | - |
 | `umastar.repository` | `interface` | [`UserRepository`](src/main/java/umastar/repository/UserRepository.java) | - |
 | `umastar.security` | `record` | [`AccessTokenClaims`](src/main/java/umastar/security/AccessTokenClaims.java) | Noi dung da xac thuc cua access token. |
 | `umastar.security` | `class` | [`CustomUserDetailsService`](src/main/java/umastar/security/CustomUserDetailsService.java) | Nap thong tin nguoi dung cho Spring Security va JwtAuthenticationFilter. |
-| `umastar.security` | `class` | [`JwtAuthenticationFilter`](src/main/java/umastar/security/JwtAuthenticationFilter.java) | Doc Bearer access token tu header Authorization, xac thuc va gan UserPrincipal vao SecurityContext. |
+| `umastar.security` | `class` | [`JwtAuthenticationFilter`](src/main/java/umastar/security/JwtAuthenticationFilter.java) | Doc Bearer access token tu header Authorization, xac thuc va gan UserPrincipal vao SecurityContext. - Khong co header Bearer: cho di tiep, Spring Security se tra 401 neu endpoint can dang nhap. - Co token nhung sai/het han/tai khoan bi khoa: tra loi JSON ngay tai day. |
 | `umastar.security` | `class` | [`JwtService`](src/main/java/umastar/security/JwtService.java) | Tao va xac thuc access token (JWT, ky HS256). Token chua: sub = id nguoi dung, role, iss, iat, exp, jti. KHONG chua email hay mat khau. Refresh token KHONG phai JWT: la chuoi ngau nhien, xem SecureTokenGenerator / TokenHasher. |
 | `umastar.security` | `class` | [`SecurityUtils`](src/main/java/umastar/security/SecurityUtils.java) | Helper lay thong tin nguoi dung dang dang nhap tu SecurityContext. |
 | `umastar.security` | `class` | [`UserPrincipal`](src/main/java/umastar/security/UserPrincipal.java) | Nguoi dung dang dang nhap, dung trong SecurityContext. Chi giu cac truong can thiet (khong giu entity User de tranh lazy loading va lo du lieu). Quyen duoc dat dang ROLE_<TEN_ROLE> nen dung duoc @PreAuthorize("hasRole('LOGISTICS_MANAGER')"). |
@@ -132,6 +136,7 @@
 | `umastar.storage` | `enum` | [`FileCategory`](src/main/java/umastar/storage/FileCategory.java) | Loai file nghiep vu: quyet dinh thu muc luu, dung luong toi da va dinh dang cho phep. Gioi han o day KHONG duoc lon hon MAX_FILE_SIZE trong .env (Spring chan truoc khi toi day). |
 | `umastar.storage` | `record` | [`StoredFile`](src/main/java/umastar/storage/StoredFile.java) | Ket qua luu file. @param path duong dan TUONG DOI so voi thu muc upload (vd documents/2026/11/<uuid>.pdf) - luu vao cot file_url @param originalName ten file goc nguoi dung tai len (chi de hien thi) @param contentType MIME da duoc xac thuc theo noi dung file @param size dung luong (byte) |
 | `umastar.util` | `class` | [`PageableFactory`](src/main/java/umastar/util/PageableFactory.java) | - |
+| `umastar.util` | `class` | [`PasswordPolicy`](src/main/java/umastar/util/PasswordPolicy.java) | Chinh sach mat khau dung chung (seed Manager, dang ky, doi mat khau, dat lai mat khau): 8 ky tu tro len, co chu hoa, chu thuong, chu so, va toi da 72 byte (gioi han cua BCrypt). |
 | `umastar.util` | `class` | [`SecureTokenGenerator`](src/main/java/umastar/util/SecureTokenGenerator.java) | - |
 | `umastar.util` | `class` | [`TokenHasher`](src/main/java/umastar/util/TokenHasher.java) | - |
 
@@ -151,6 +156,7 @@ _Chưa có Controller nào trong mã nguồn._
 
 ### Repositories
 
+- **`CustomerRepository`** (`src/main/java/umastar/repository/CustomerRepository.java`)
 - **`RefreshTokenRepository`** (`src/main/java/umastar/repository/RefreshTokenRepository.java`)
 - **`UserRepository`** (`src/main/java/umastar/repository/UserRepository.java`)
 

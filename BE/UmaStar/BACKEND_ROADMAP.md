@@ -23,8 +23,8 @@ Tài liệu theo dõi tiến độ triển khai Backend theo thứ tự ưu tiê
 |---|---|---|---|---|
 | [x] | Chuẩn hóa Response lỗi & Phân trang | `dto/response`, `GlobalExceptionHandler`, `PageableFactory` | Hệ thống | Trả `{timestamp, status, code, error, message, path, errors{field}}` cho 400, 401, 403, 404, 405, 409, 413, 415, 422, 423; phân trang `page, size (max 100), sort` |
 | [x] | Hạ tầng Upload File | `service/FileStorageService` + `service/impl/LocalFileStorageService` | Hệ thống | Lưu local theo `UPLOAD_DIR` (dễ mở rộng S3), whitelist đuôi & MIME + magic bytes, giới hạn dung lượng, đổi tên UUID |
-| [ ] | Cấu hình Security, CORS, JWT Filter & Swagger Bearer | `SecurityConfig`, `JwtService`, `OpenApiConfig` | Hệ thống | Stateless, BCrypt, trả JSON 401/403, `permitAll` cho `/api/v1/auth/**` & Swagger UI, thêm Bearer JWT vào Swagger |
-| [ ] | Seed tài khoản Manager đầu tiên | `DataSeeder` | Hệ thống | Tạo sẵn 1 `LOGISTICS_MANAGER` từ `.env` nếu DB chưa có |
+| [x] | Cấu hình Security, CORS, JWT Filter & Swagger Bearer | `SecurityConfig`, `CorsConfig`, `JwtAuthenticationFilter`, `JwtService`, `OpenApiConfig` | Hệ thống | Stateless, BCrypt, CORS theo `CORS_ALLOWED_ORIGINS`, trả JSON 401/403, `permitAll` cho `/api/v1/auth/**` (trừ `/logout-all`, `/change-password`) & Swagger UI |
+| [x] | Seed tài khoản mẫu theo từng Role | `DataSeeder`, `SeedProperties` | Hệ thống | Tạo sẵn tài khoản cho từng `Role` cấu hình trong `.env` (kèm `Customer` profile cho `CUSTOMER`) nếu DB chưa có |
 | [ ] | Đăng ký khách hàng | `POST /api/v1/auth/register` | Công khai | Email lowercase, unique, ≤ 150 ký tự; mật khẩu 8–72 ký tự (hoa, thường, số); phone `+?[0-9]{8,15}`; tạo `User(CUSTOMER)` + `Customer` |
 | [ ] | Đăng nhập | `POST /api/v1/auth/login` | Công khai | Account phải `ACTIVE`; kiểm tra `lockedUntil`; sai 5 lần khóa 15 phút; thành công reset counter + ghi `lastLoginAt`; lỗi chung chung |
 | [ ] | Làm mới token (Rotation) | `POST /api/v1/auth/refresh` | Công khai | Tìm SHA-256 hash, chưa revoke, chưa hết hạn; thu hồi token cũ, gán `replacedByTokenId`, cấp mới cùng `familyId`; dùng lại token đã revoke → revoke cả family |
@@ -147,6 +147,6 @@ Tài liệu theo dõi tiến độ triển khai Backend theo thứ tự ưu tiê
 <!-- AUTO-GENERATED-PROGRESS:START -->
 > Tự động cập nhật bởi `java scripts/SyncDocs.java`.
 
-- **Tiến độ checklist:** `6/62` hạng mục (10%)
-- **Thành phần đã có trong code:** `0` Controllers (`0` endpoints), `2` Services, `2` Repositories
+- **Tiến độ checklist:** `8/62` hạng mục (13%)
+- **Thành phần đã có trong code:** `0` Controllers (`0` endpoints), `2` Services, `3` Repositories
 <!-- AUTO-GENERATED-PROGRESS:END -->
