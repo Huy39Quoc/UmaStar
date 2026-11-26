@@ -6,14 +6,18 @@ import java.time.*;
 import umastar.enums.*;
 
 @Entity
-@Table(name = "users")
+@Table(name = "users",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uk_users_email", columnNames = {"email"}),
+                @UniqueConstraint(name = "uk_users_reset_token_hash", columnNames = {"reset_token_hash"})
+        })
 @Getter @Setter @NoArgsConstructor
 public class User extends BaseEntity {
 
     @Column(name = "full_name", nullable = false, length = 150)
     private String fullName;
 
-    @Column(nullable = false, unique = true, length = 150)
+    @Column(nullable = false, length = 150)
     private String email;
 
     @Column(length = 30)
@@ -44,4 +48,13 @@ public class User extends BaseEntity {
 
     @Column(name = "password_changed_at")
     private Instant passwordChangedAt;
+
+    @Column(name = "reset_token_hash", length = 128)
+    private String resetTokenHash;
+
+    @Column(name = "reset_token_expires_at")
+    private Instant resetTokenExpiresAt;
+
+    @Column(name = "reset_requested_at")
+    private Instant resetRequestedAt;
 }

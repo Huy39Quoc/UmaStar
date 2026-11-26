@@ -1,31 +1,28 @@
 package umastar.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import umastar.exception.ErrorCode;
+
 import java.time.Instant;
-import java.util.List;
+import java.util.Map;
 
 public record ErrorResponse(
         Instant timestamp,
         int status,
-        String code,
+        int code,
+        String error,
         String message,
-        List<FieldViolation> errors,
-        String path) {
+        String path,
+        @JsonInclude(JsonInclude.Include.NON_EMPTY) Map<String, String> errors) {
 
-    public record FieldViolation(String field, String message) {
-    }
-
-    public static ErrorResponse of(ErrorCode code, String message, String path) {
-        return of(code, message, path, List.of());
-    }
-
-    public static ErrorResponse of(ErrorCode code, String message, String path, List<FieldViolation> errors) {
+    public static ErrorResponse of(ErrorCode errorCode, String message, String path, Map<String, String> errors) {
         return new ErrorResponse(
                 Instant.now(),
-                code.getStatus(),
-                code.name(),
-                message != null ? message : code.getDefaultMessage(),
-                errors != null ? errors : List.of(),
-                path);
+                errorCode.getHttpStatus().value(),
+                errorCode.getCode(),
+                errorCode.getHttpStatus().getReasonPhrase(),
+                message != null ? message : errorCode.getMessage(),
+                path,
+                errors);
     }
 }

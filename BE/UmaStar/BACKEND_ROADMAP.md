@@ -21,15 +21,15 @@ Tài liệu theo dõi tiến độ triển khai Backend theo thứ tự ưu tiê
 
 | Done | Chức năng / Thành phần | API / Vị trí | Ai dùng | Validation & Quy tắc chính |
 |---|---|---|---|---|
-| [ ] | Chuẩn hóa Response lỗi & Phân trang | `common/dto`, `GlobalExceptionHandler` | Hệ thống | Trả `{timestamp, status, code, message, errors[field], path}` cho 400, 401, 403, 404, 409, 422; phân trang `page, size (max 100), sort` |
-| [ ] | Hạ tầng Upload File | `FileStorageService` + `LocalFileStorageService` | Hệ thống | Lưu local theo `UPLOAD_DIR` (dễ mở rộng S3), whitelist đuôi & MIME, giới hạn dung lượng, đổi tên UUID |
+| [x] | Chuẩn hóa Response lỗi & Phân trang | `dto/response`, `GlobalExceptionHandler`, `PageableFactory` | Hệ thống | Trả `{timestamp, status, code, error, message, path, errors{field}}` cho 400, 401, 403, 404, 405, 409, 413, 415, 422, 423; phân trang `page, size (max 100), sort` |
+| [ ] | Hạ tầng Upload File | `service/FileStorageService` + `LocalFileStorageService` | Hệ thống | Lưu local theo `UPLOAD_DIR` (dễ mở rộng S3), whitelist đuôi & MIME, giới hạn dung lượng, đổi tên UUID |
 | [ ] | Cấu hình Security, CORS, JWT Filter & Swagger Bearer | `SecurityConfig`, `JwtService`, `OpenApiConfig` | Hệ thống | Stateless, BCrypt, trả JSON 401/403, `permitAll` cho `/api/v1/auth/**` & Swagger UI, thêm Bearer JWT vào Swagger |
 | [ ] | Seed tài khoản Manager đầu tiên | `DataSeeder` | Hệ thống | Tạo sẵn 1 `LOGISTICS_MANAGER` từ `.env` nếu DB chưa có |
 | [ ] | Đăng ký khách hàng | `POST /api/v1/auth/register` | Công khai | Email lowercase, unique, ≤ 150 ký tự; mật khẩu 8–72 ký tự (hoa, thường, số); phone `+?[0-9]{8,15}`; tạo `User(CUSTOMER)` + `Customer` |
 | [ ] | Đăng nhập | `POST /api/v1/auth/login` | Công khai | Account phải `ACTIVE`; kiểm tra `lockedUntil`; sai 5 lần khóa 15 phút; thành công reset counter + ghi `lastLoginAt`; lỗi chung chung |
 | [ ] | Làm mới token (Rotation) | `POST /api/v1/auth/refresh` | Công khai | Tìm SHA-256 hash, chưa revoke, chưa hết hạn; thu hồi token cũ, gán `replacedByTokenId`, cấp mới cùng `familyId`; dùng lại token đã revoke → revoke cả family |
 | [ ] | Đăng xuất | `POST /api/v1/auth/logout`, `/logout-all` | Đã đăng nhập | Revoke token hiện tại hoặc toàn bộ token của user (ghi `revokedReason`) |
-| [ ] | Quên / Đặt lại mật khẩu | `POST /api/v1/auth/forgot-password`, `/reset-password` | Công khai | Luôn trả 200; lưu hash token, hạn 15–30 phút, dùng 1 lần (`usedAt`); đổi xong revoke hết refresh token; rate limit |
+| [ ] | Quên / Đặt lại mật khẩu | `POST /api/v1/auth/forgot-password`, `/reset-password` | Công khai | Luôn trả 200; lưu `resetTokenHash`, `resetTokenExpiresAt`, `resetRequestedAt` trên `users` (hạn 15–30 phút, dùng xong xóa về `null`); đổi xong revoke hết refresh token; rate limit |
 | [ ] | Đổi mật khẩu | `POST /api/v1/auth/change-password` | Đã đăng nhập | Kiểm tra mật khẩu cũ, mật khẩu mới khác mật khẩu cũ và đạt chính sách; cập nhật `passwordChangedAt` |
 | [ ] | Xem / Sửa hồ sơ cá nhân | `GET/PUT /api/v1/me` | Đã đăng nhập | Không cho sửa `email` và `role`; validate `phone` |
 | [ ] | Quản lý nhân viên | `POST/GET /api/v1/users`, `PATCH /api/v1/users/{id}/status` | `LOGISTICS_MANAGER` | Role hợp lệ (`Role` enum); không tự khóa mình, không khóa Manager cuối cùng; khi `INACTIVE` revoke refresh token; lọc role/status/keyword |
@@ -138,7 +138,7 @@ Tài liệu theo dõi tiến độ triển khai Backend theo thứ tự ưu tiê
 | [ ] | Báo cáo doanh thu | `GET /api/v1/reports/revenue?from&to&groupBy` | `LOGISTICS_MANAGER` | `from ≤ to`, tối đa 366 ngày; `groupBy ∈ {month, customer, transportType}`; tổng `quotedPrice` đơn `COMPLETED`, gom theo `currency` |
 | [ ] | Báo cáo chi phí & On-time delivery & Tổng quan | `GET /api/v1/reports/costs`, `/on-time-delivery`, `/summary` | `LOGISTICS_MANAGER` | `actualCost` vs `extraCost`; tỷ lệ `actualEnd ≤ plannedEnd + tolerance`; dashboard tổng quan |
 | [ ] | Xuất file báo cáo (tùy chọn) | `GET /api/v1/reports/*/export` | `LOGISTICS_MANAGER` | CSV / Excel |
-| [ ] | Job nền tự động | `@Scheduled` (`ScheduledJobs`) | Hệ thống | Dọn token hết hạn (ngày); nhắc giấy tờ trước 7 & 3 ngày (ngày); cảnh báo chuyến trễ (15 phút); tự xác nhận bàn giao sau N ngày; nhắc đơn `PENDING` quá N ngày |
+| [ ] | Job nền tự động | `@Scheduled` (`ScheduledJobs`) | Hệ thống | Dọn `refresh_tokens` hết hạn/revoked & `resetToken*` quá hạn (ngày); nhắc giấy tờ trước 7 & 3 ngày (ngày); cảnh báo chuyến trễ (15 phút); tự xác nhận bàn giao sau N ngày; nhắc đơn `PENDING` quá N ngày |
 
 ---
 
@@ -147,6 +147,6 @@ Tài liệu theo dõi tiến độ triển khai Backend theo thứ tự ưu tiê
 <!-- AUTO-GENERATED-PROGRESS:START -->
 > Tự động cập nhật bởi `java scripts/SyncDocs.java`.
 
-- **Tiến độ checklist:** `4/62` hạng mục (6%)
+- **Tiến độ checklist:** `5/62` hạng mục (8%)
 - **Thành phần đã có trong code:** `0` Controllers (`0` endpoints), `0` Services, `0` Repositories
 <!-- AUTO-GENERATED-PROGRESS:END -->

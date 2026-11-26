@@ -19,18 +19,24 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 /**
- * Cau hinh bao mat cho API (dung JWT stateless, khong dung session/form login).
+ * Cau hinh Spring Security co ban (stateless JWT, mo Swagger/Auth, tra JSON cho 401/403).
  */
 @Configuration
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    // Cac duong dan mo cong khai khong can dang nhap
     private static final String[] PUBLIC_ENDPOINTS = {
             "/v3/api-docs/**",
             "/swagger-ui/**",
             "/swagger-ui.html",
-            "/api/v1/auth/**"
+            // Chi mo dung cac endpoint auth khong can dang nhap.
+            // /logout-all va /change-password PHAI co access token nen khong nam trong danh sach nay.
+            "/api/v1/auth/register",
+            "/api/v1/auth/login",
+            "/api/v1/auth/refresh",
+            "/api/v1/auth/logout",
+            "/api/v1/auth/forgot-password",
+            "/api/v1/auth/reset-password"
     };
 
     private final ObjectMapper objectMapper;
@@ -42,33 +48,32 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
-                // Tat CSRF va Session vi REST API xac thuc bang JWT o moi request
                 .csrf(AbstractHttpConfigurer::disable)
-                .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                // Cho phep Swagger va /auth/** truy cap tu do; moi API khac bat buoc dang nhap
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
                         .anyRequest().authenticated()
                 )
-                // Khi chua dang nhap (401) hoac khong du quyen (403) -> tra JSON ErrorResponse thay vi trang HTML
                 .exceptionHandling(ex -> ex
-                        .authenticationEntryPoint((req, res, e) -> writeError(res, ErrorCode.UNAUTHORIZED, req.getRequestURI()))
-                        .accessDeniedHandler((req, res, e) -> writeError(res, ErrorCode.FORBIDDEN, req.getRequestURI()))
+                        .authenticationEntryPoint((request, response, authException) ->
+                                writeError(response, ErrorCode.UNAUTHORIZED, request.getRequestURI()))
+                        .accessDeniedHandler((request, response, accessDeniedException) ->
+                                writeError(response, ErrorCode.FORBIDDEN, request.getRequestURI()))
                 )
                 .build();
     }
 
-    // Ma hoa mat khau bang BCrypt (dung khi dang ky / doi mat khau / kiem tra dang nhap)
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    private void writeError(HttpServletResponse res, ErrorCode code, String path) throws IOException {
-        res.setStatus(code.getStatus());
-        res.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        res.setCharacterEncoding(StandardCharsets.UTF_8.name());
-        res.getWriter().write(objectMapper.writeValueAsString(ErrorResponse.of(code, code.getDefaultMessage(), path)));
-        res.getWriter().flush();
+    private void writeError(HttpServletResponse response, ErrorCode code, String path) throws IOException {
+        response.setStatus(code.getHttpStatus().value());
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+        ErrorResponse body = ErrorResponse.of(code, null, path, null);
+        response.getWriter().write(objectMapper.writeValueAsString(body));
+        response.getWriter().flush();
     }
 }

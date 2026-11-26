@@ -68,11 +68,12 @@
 |---|---|---|---|
 | `umastar` | `class` | [`UmaStarApplication`](src/main/java/umastar/UmaStarApplication.java) | `@SpringBootApplication` |
 | `umastar.config` | `class` | [`OpenApiConfig`](src/main/java/umastar/config/OpenApiConfig.java) | `@Configuration` |
-| `umastar.config` | `class` | [`SecurityConfig`](src/main/java/umastar/config/SecurityConfig.java) | Cau hinh bao mat cho API (dung JWT stateless, khong dung session/form login). |
+| `umastar.config` | `class` | [`SecurityConfig`](src/main/java/umastar/config/SecurityConfig.java) | Cau hinh Spring Security co ban (stateless JWT, mo Swagger/Auth, tra JSON cho 401/403). |
 | `umastar.dto.response` | `record` | [`ErrorResponse`](src/main/java/umastar/dto/response/ErrorResponse.java) | - |
+| `umastar.dto.response` | `record` | [`PageResponse`](src/main/java/umastar/dto/response/PageResponse.java) | - |
 | `umastar.entity` | `class` | [`BaseEntity`](src/main/java/umastar/entity/BaseEntity.java) | `@MappedSuperclass`, `@Getter`, `@Setter` |
 | `umastar.entity` | `class` | [`City`](src/main/java/umastar/entity/City.java) | `@Entity`, `@Table`, `@Getter @Setter @NoArgsConstructor` |
-| `umastar.entity` | `class` | [`Country`](src/main/java/umastar/entity/Country.java) | Danh mục quốc gia. - homeCountry = true : nước sở tại (Việt Nam) -> dùng cho đơn NỘI ĐỊA - partner = true : nước đã hợp tác -> dùng cho đơn QUỐC TẾ |
+| `umastar.entity` | `class` | [`Country`](src/main/java/umastar/entity/Country.java) | `@Entity`, `@Table`, `@Getter @Setter @NoArgsConstructor` |
 | `umastar.entity` | `class` | [`Customer`](src/main/java/umastar/entity/Customer.java) | `@Entity`, `@Table`, `@Getter @Setter @NoArgsConstructor` |
 | `umastar.entity` | `class` | [`Handover`](src/main/java/umastar/entity/Handover.java) | `@Entity`, `@Table`, `@Getter @Setter @NoArgsConstructor` |
 | `umastar.entity` | `class` | [`Horse`](src/main/java/umastar/entity/Horse.java) | `@Entity`, `@Table`, `@Index`, `@Getter @Setter @NoArgsConstructor` |
@@ -81,7 +82,6 @@
 | `umastar.entity` | `class` | [`LegalDocument`](src/main/java/umastar/entity/LegalDocument.java) | `@Entity`, `@Table`, `@Index`, `@Index`, `@Index`, `@Getter @Setter @NoArgsConstructor` |
 | `umastar.entity` | `class` | [`Notification`](src/main/java/umastar/entity/Notification.java) | `@Entity`, `@Table`, `@Index`, `@Getter @Setter @NoArgsConstructor` |
 | `umastar.entity` | `class` | [`OrderHorse`](src/main/java/umastar/entity/OrderHorse.java) | `@Entity`, `@Table`, `@Getter @Setter @NoArgsConstructor` |
-| `umastar.entity` | `class` | [`PasswordResetToken`](src/main/java/umastar/entity/PasswordResetToken.java) | `@Entity`, `@Table`, `@Index`, `@Getter @Setter @NoArgsConstructor` |
 | `umastar.entity` | `class` | [`RefreshToken`](src/main/java/umastar/entity/RefreshToken.java) | `@Entity`, `@Table`, `@Index`, `@Index`, `@Index`, `@Getter @Setter @NoArgsConstructor` |
 | `umastar.entity` | `class` | [`Regulation`](src/main/java/umastar/entity/Regulation.java) | `@Entity`, `@Table`, `@Index`, `@Getter @Setter @NoArgsConstructor` |
 | `umastar.entity` | `class` | [`RouteChangeRequest`](src/main/java/umastar/entity/RouteChangeRequest.java) | `@Entity`, `@Table`, `@Index`, `@Index`, `@Getter @Setter @NoArgsConstructor` |
@@ -90,7 +90,7 @@
 | `umastar.entity` | `class` | [`TripAssignment`](src/main/java/umastar/entity/TripAssignment.java) | `@Entity`, `@Table`, `@Getter @Setter @NoArgsConstructor` |
 | `umastar.entity` | `class` | [`TripStatusLog`](src/main/java/umastar/entity/TripStatusLog.java) | `@Entity`, `@Table`, `@Index`, `@Getter @Setter @NoArgsConstructor` |
 | `umastar.entity` | `class` | [`TripStop`](src/main/java/umastar/entity/TripStop.java) | `@Entity`, `@Table`, `@Getter @Setter @NoArgsConstructor` |
-| `umastar.entity` | `class` | [`User`](src/main/java/umastar/entity/User.java) | `@Entity`, `@Table`, `@Getter @Setter @NoArgsConstructor` |
+| `umastar.entity` | `class` | [`User`](src/main/java/umastar/entity/User.java) | `@Entity`, `@Table`, `@UniqueConstraint`, `@UniqueConstraint`, `@Getter @Setter @NoArgsConstructor` |
 | `umastar.entity` | `class` | [`Vehicle`](src/main/java/umastar/entity/Vehicle.java) | `@Entity`, `@Table`, `@Getter @Setter @NoArgsConstructor` |
 | `umastar.enums` | `enum` | [`ApprovalStatus`](src/main/java/umastar/enums/ApprovalStatus.java) | - |
 | `umastar.enums` | `enum` | [`AssignmentRole`](src/main/java/umastar/enums/AssignmentRole.java) | - |
@@ -115,9 +115,12 @@
 | `umastar.enums` | `enum` | [`UserStatus`](src/main/java/umastar/enums/UserStatus.java) | - |
 | `umastar.enums` | `enum` | [`VehicleStatus`](src/main/java/umastar/enums/VehicleStatus.java) | - |
 | `umastar.enums` | `enum` | [`VehicleType`](src/main/java/umastar/enums/VehicleType.java) | - |
-| `umastar.exception` | `class` | [`ApiException`](src/main/java/umastar/exception/ApiException.java) | Loi nghiep vu chung cho toan bo Service. Khi can bao loi ve Client, chi can throw: throw new ApiException(ErrorCode.FORBIDDEN); hoac throw ApiException.notFound("Order", id); |
-| `umastar.exception` | `enum` | [`ErrorCode`](src/main/java/umastar/exception/ErrorCode.java) | Danh sach ma loi chuan cua API kem HTTP status va thong bao mac dinh (tieng Anh). |
-| `umastar.exception` | `class` | [`GlobalExceptionHandler`](src/main/java/umastar/exception/GlobalExceptionHandler.java) | Bo hung loi tap trung cho toan bo Controller. Moi loi phat sinh se duoc doi thanh JSON ErrorResponse thong nhat. |
+| `umastar.exception` | `class` | [`AppException`](src/main/java/umastar/exception/AppException.java) | Loi nghiep vu co kiem soat. Dung: throw new AppException(ErrorCode.HORSE_NOT_FOUND); throw new AppException(ErrorCode.BUSINESS_RULE_VIOLATION, "Ngày khởi hành phải sau hôm nay ít nhất 14 ngày"); Ban thong bao rieng chi dung khi can chi tiet dong, con lai dung message mac dinh cua ErrorCode. |
+| `umastar.exception` | `enum` | [`ErrorCode`](src/main/java/umastar/exception/ErrorCode.java) | Ma loi thong nhat. Moi loi gom: ma so (code), thong bao hien thi cho nguoi dung, HTTP status. QUY UOC DAI MA (moi nhom 100 so, khong de trung): 100 AUTH \| 200 TOKEN \| 300 USER \| 400 PASSWORD \| 500 FILE \| 600 SYSTEM 700 MASTER DATA (Country, City) \| 800 VEHICLE \| 900 REGULATION 1000 CUSTOMER \| 1100 HORSE \| 1200 NOTIFICATION (du kien) 1300 ORDER \| 1400 LEGAL_DOCUMENT \| 1500 TRIP \| 1600 TRIP_STOP, ASSIGNMENT 1700 INCIDENT, ROUTE_CHANGE \| 1800 HANDOVER \| 1900 REPORT Them loi moi: chon so tiep theo trong dung nhom. ErrorCodeTest se bao loi neu bi trung so. |
+| `umastar.exception` | `class` | [`GlobalExceptionHandler`](src/main/java/umastar/exception/GlobalExceptionHandler.java) | Bo hung loi tap trung. Moi loi -> ErrorResponse thong nhat. Quy tac: loi cua client (4xx) khong log stack trace; loi he thong (5xx) luon log day du. |
+| `umastar.util` | `class` | [`PageableFactory`](src/main/java/umastar/util/PageableFactory.java) | - |
+| `umastar.util` | `class` | [`SecureTokenGenerator`](src/main/java/umastar/util/SecureTokenGenerator.java) | - |
+| `umastar.util` | `class` | [`TokenHasher`](src/main/java/umastar/util/TokenHasher.java) | - |
 
 ### API Endpoints (Controllers)
 

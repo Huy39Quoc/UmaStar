@@ -7,9 +7,11 @@ import java.time.*;
 import umastar.enums.*;
 
 @Entity
-@Table(name = "horses", indexes = {
-        @Index(name = "idx_horse_customer", columnList = "customer_id")
-})
+@Table(name = "horses",
+        uniqueConstraints = @UniqueConstraint(name = "uk_horses_microchip_no", columnNames = {"microchip_no"}),
+        indexes = {
+                @Index(name = "idx_horse_customer", columnList = "customer_id")
+        })
 @Getter @Setter @NoArgsConstructor
 public class Horse extends BaseEntity {
 
@@ -20,7 +22,7 @@ public class Horse extends BaseEntity {
     @Column(nullable = false, length = 150)
     private String name;
 
-    @Column(name = "microchip_no", nullable = false, unique = true, length = 50)
+    @Column(name = "microchip_no", nullable = false, length = 50)
     private String microchipNo;
 
     @Column(name = "passport_no", length = 50)
