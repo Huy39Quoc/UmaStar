@@ -4,7 +4,7 @@
 Mọi mã nguồn nằm trong package gốc `umastar`, tổ chức theo tầng:
 - `umastar.config`: Cấu hình Spring (`SecurityConfig`, `OpenApiConfig`, ...).
 - `umastar.controller`: REST Controller với prefix `/api/v1`, chỉ nhận/trả DTO, không chứa logic nghiệp vụ.
-- `umastar.service`: Xử lý nghiệp vụ, `@Transactional`, kiểm tra quyền sở hữu và gọi State Machine.
+- `umastar.service` & `umastar.service.impl`: Interface nghiệp vụ đặt trong `umastar.service` (`<Domain>Service`), class triển khai đặt trong `umastar.service.impl` (`<Domain>ServiceImpl` hoặc `<Provider><Domain>Service`), chứa `@Transactional`, kiểm tra quyền sở hữu và gọi State Machine.
 - `umastar.repository`: Spring Data JPA Repository (`*Repository`), dùng `@EntityGraph` hoặc `JOIN FETCH` cho truy vấn danh sách.
 - `umastar.dto.request` & `umastar.dto.response`: Tách riêng DTO đầu vào (`*Request`) và đầu ra (`*Response` dùng `record` nếu bất biến). Không trả Entity trực tiếp ra API.
 - `umastar.entity` & `umastar.enums`: Thực thể JPA kế thừa `BaseEntity` và các enum trạng thái/phân loại.
@@ -14,7 +14,7 @@ Mọi mã nguồn nằm trong package gốc `umastar`, tổ chức theo tầng:
 
 ## 2. Quy ước đặt tên & thiết kế chuẩn
 - **Class / Record**:
-  - Controller: `<Domain>Controller`; Service: `<Domain>Service`; Repository: `<Entity>Repository`.
+  - Controller: `<Domain>Controller`; Service interface: `<Domain>Service` (trong `umastar.service`); Service impl: `<Domain>ServiceImpl` (trong `umastar.service.impl`); Repository: `<Entity>Repository`.
   - Request DTO: `<Action><Domain>Request` (VD: `CreateOrderRequest`, `LoginRequest`); Response DTO: `<Domain>Response` / `<Domain>DetailResponse`.
   - Handler trong `GlobalExceptionHandler`: bắt đầu bằng `handle*` (VD: `handleAppException`, `handleValidation`).
 - **Method trong Service**: dùng động từ rõ nghĩa: `get*` (lấy 1 bản ghi, ném `AppException` nếu không thấy), `list*` / `search*` (trả `PageResponse<...>`), `create*`, `update*`, `delete*` / `deactivate*`, `approve*`, `reject*`, `cancel*`.
@@ -31,7 +31,7 @@ Mọi mã nguồn nằm trong package gốc `umastar`, tổ chức theo tầng:
 Mỗi khi thêm, sửa hoặc xóa bất kỳ file nào trong `src/main/java/umastar/**` hoặc `src/main/resources/**`:
 
 1. **Tự kiểm tra & sửa lỗi trước khi kết thúc**:
-   - Chạy `.\mvnw.cmd clean test` (đã gồm `ErrorCodeTest` kiểm tra trùng mã lỗi và `UmaStarApplicationTests` kiểm tra Hibernate/PostgreSQL/Security/Swagger).
+   - Chạy `.\mvnw.cmd test` (đã gồm `ErrorCodeTest` kiểm tra trùng mã lỗi và `UmaStarApplicationTests` kiểm tra Hibernate/PostgreSQL/Security/Swagger). Tránh dùng `clean` khi không cần thiết để không xóa `target/` làm Java Language Server trong IDE báo đỏ giả (chỉ dùng `clean` khi xóa/đổi tên file hoặc sửa `pom.xml`).
    - Nếu phát hiện sai tên file vs `public class`, sai package, `EAGER` fetch, `@Data` trên entity, hardcode cấu hình, lệch `uk_*` constraint, hoặc lỗi biên dịch/test -> **tự sửa ngay** rồi kiểm tra lại.
 2. **Chạy script đồng bộ tài liệu tự động**:
    ```bash

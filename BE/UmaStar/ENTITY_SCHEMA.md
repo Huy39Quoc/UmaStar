@@ -314,7 +314,7 @@ Thông báo gửi tới người dùng (nhắc bổ sung hồ sơ, cập nhật 
 > Phần dưới đây được đồng bộ tự động từ toàn bộ mã nguồn Java bằng lệnh `java scripts/SyncDocs.java`. Không sửa tay trong khối `AUTO-GENERATED`.
 
 <!-- AUTO-GENERATED:START -->
-Cập nhật từ toàn bộ mã nguồn: `src/main/java/umastar/**` (`21` entities/superclasses, `24` enums).
+Cập nhật từ toàn bộ mã nguồn: `src/main/java/umastar/**` (`21` entities/superclasses, `26` enums).
 
 ### Danh sách Entity
 
@@ -626,12 +626,14 @@ Cập nhật từ toàn bộ mã nguồn: `src/main/java/umastar/**` (`21` entit
 
 | Enum | Giá trị |
 |---|---|
+| `AllowedFileType` | `PDF`, `Set.of`, `"pdf")`, `JPEG`, `Set.of`, `"image/pjpeg")`, `"jpg"`, `"jpeg")`, `PNG`, `Set.of`, `"png")` |
 | `ApprovalStatus` | `MISSING`, `SUBMITTED`, `UNDER_REVIEW`, `APPROVED`, `REJECTED` |
 | `AssignmentRole` | `DRIVER`, `ESCORT`, `SPECIALIST`, `COORDINATOR` |
 | `ChangeRequestStatus` | `PENDING`, `APPROVED`, `REJECTED` |
 | `CustomerType` | `CLUB`, `INDIVIDUAL` |
 | `DocType` | `VACCINATION_CERT`, `HORSE_PASSPORT`, `EXPORT_PERMIT`, `IMPORT_PERMIT`, `HEALTH_CERT`, `OTHER` |
 | `ErrorCode` | `INVALID_CREDENTIALS`, `"Email`, `HttpStatus.UNAUTHORIZED)`, `UNAUTHORIZED`, `"Vui`, `HttpStatus.UNAUTHORIZED)`, `FORBIDDEN`, `"Bạn`, `HttpStatus.FORBIDDEN)`, `ACCOUNT_LOCKED`, `"Tài`, `HttpStatus.LOCKED)`, `ACCOUNT_DISABLED`, `"Tài`, `HttpStatus.FORBIDDEN)`, `INVALID_TOKEN`, `"Phiên`, `HttpStatus.UNAUTHORIZED)`, `TOKEN_EXPIRED`, `"Phiên`, `HttpStatus.UNAUTHORIZED)`, `INVALID_REFRESH_TOKEN`, `"Phiên`, `HttpStatus.UNAUTHORIZED)`, `REFRESH_TOKEN_REVOKED`, `"Phiên`, `HttpStatus.UNAUTHORIZED)`, `INVALID_RESET_TOKEN`, `"Mã`, `HttpStatus.BAD_REQUEST)`, `USER_NOT_FOUND`, `"Không`, `HttpStatus.NOT_FOUND)`, `EMAIL_ALREADY_EXISTS`, `"Email`, `HttpStatus.CONFLICT)`, `INVALID_STAFF_ROLE`, `"Vai`, `HttpStatus.BAD_REQUEST)`, `CANNOT_DEACTIVATE_SELF`, `"Bạn`, `HttpStatus.CONFLICT)`, `LAST_MANAGER_PROTECTED`, `"Không`, `HttpStatus.CONFLICT)`, `INVALID_OLD_PASSWORD`, `"Mật`, `HttpStatus.BAD_REQUEST)`, `NEW_PASSWORD_SAME_AS_OLD`, `"Mật`, `HttpStatus.BAD_REQUEST)`, `PASSWORD_MISMATCH`, `"Mật`, `HttpStatus.BAD_REQUEST)`, `FILE_TOO_LARGE`, `"File`, `HttpStatus.valueOf`, `UNSUPPORTED_FILE_TYPE`, `"Định`, `HttpStatus.UNSUPPORTED_MEDIA_TYPE)`, `INVALID_FILE_NAME`, `"Tên`, `HttpStatus.BAD_REQUEST)`, `FILE_NOT_FOUND`, `"Không`, `HttpStatus.NOT_FOUND)`, `FILE_STORAGE_ERROR`, `"Không`, `vui`, `HttpStatus.INTERNAL_SERVER_ERROR)`, `INTERNAL_SERVER_ERROR`, `"Lỗi`, `vui`, `HttpStatus.INTERNAL_SERVER_ERROR)`, `INVALID_REQUEST`, `"Yêu`, `HttpStatus.BAD_REQUEST)`, `VALIDATION_FAILED`, `"Dữ`, `HttpStatus.BAD_REQUEST)`, `METHOD_NOT_ALLOWED`, `"Phương`, `HttpStatus.METHOD_NOT_ALLOWED)`, `UNSUPPORTED_MEDIA_TYPE`, `"Content-Type`, `HttpStatus.UNSUPPORTED_MEDIA_TYPE)`, `RESOURCE_NOT_FOUND`, `"Không`, `HttpStatus.NOT_FOUND)`, `CONCURRENT_UPDATE`, `"Dữ`, `HttpStatus.CONFLICT)`, `DATA_INTEGRITY_VIOLATION`, `"Dữ`, `HttpStatus.CONFLICT)`, `RESOURCE_IN_USE`, `"Dữ`, `HttpStatus.CONFLICT)`, `INVALID_STATE_TRANSITION`, `"Không`, `HttpStatus.CONFLICT)`, `BUSINESS_RULE_VIOLATION`, `"Vi`, `HttpStatus.valueOf`, `TOO_MANY_REQUESTS`, `"Thao`, `vui`, `HttpStatus.TOO_MANY_REQUESTS)`, `COUNTRY_NOT_FOUND`, `"Không`, `HttpStatus.NOT_FOUND)`, `COUNTRY_CODE_ALREADY_EXISTS`, `"Mã`, `HttpStatus.CONFLICT)`, `HOME_COUNTRY_ALREADY_EXISTS`, `"Hệ`, `HttpStatus.CONFLICT)`, `CITY_NOT_FOUND`, `"Không`, `HttpStatus.NOT_FOUND)`, `CITY_NAME_ALREADY_EXISTS`, `"Tên`, `HttpStatus.CONFLICT)`, `CITY_NOT_IN_COUNTRY`, `"Thành`, `HttpStatus.BAD_REQUEST)`, `INVALID_TIMEZONE`, `"Múi`, `HttpStatus.BAD_REQUEST)`, `COUNTRY_NOT_PARTNER`, `"Quốc`, `HttpStatus.BAD_REQUEST)`, `VEHICLE_NOT_FOUND`, `"Không`, `HttpStatus.NOT_FOUND)`, `VEHICLE_CODE_ALREADY_EXISTS`, `"Biển`, `HttpStatus.CONFLICT)`, `VEHICLE_IN_USE`, `"Phương`, `HttpStatus.CONFLICT)`, `VEHICLE_NOT_AVAILABLE`, `"Phương`, `HttpStatus.CONFLICT)`, `REGULATION_NOT_FOUND`, `"Không`, `HttpStatus.NOT_FOUND)`, `REGULATION_DOCS_REQUIRED`, `"Quy`, `HttpStatus.BAD_REQUEST)`, `CUSTOMER_NOT_FOUND`, `"Không`, `HttpStatus.NOT_FOUND)`, `HORSE_NOT_FOUND`, `"Không`, `HttpStatus.NOT_FOUND)`, `MICROCHIP_ALREADY_EXISTS`, `"Số`, `HttpStatus.CONFLICT)`, `HORSE_IN_ACTIVE_ORDER`, `"Ngựa`, `HttpStatus.CONFLICT)`, `NOTIFICATION_NOT_FOUND`, `"Không`, `HttpStatus.NOT_FOUND)` |
+| `FileCategory` | `/**`, `10`, `EnumSet.of`, `AllowedFileType.JPEG`, `AllowedFileType.PNG))`, `/**`, `anh`, `anh`, `5`, `6).`, `5`, `EnumSet.of`, `AllowedFileType.PNG))`, `/**`, `2`, `EnumSet.of`, `AllowedFileType.PNG))` |
 | `HorseCondition` | `STABLE`, `NOT_EATING`, `STRESSED`, `CLIMATE_CHANGE` |
 | `HorseSex` | `STALLION`, `MARE`, `GELDING`, `COLT`, `FILLY` |
 | `IncidentStatus` | `OPEN`, `HANDLING`, `RESOLVED` |

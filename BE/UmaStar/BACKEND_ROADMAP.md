@@ -22,7 +22,7 @@ Tài liệu theo dõi tiến độ triển khai Backend theo thứ tự ưu tiê
 | Done | Chức năng / Thành phần | API / Vị trí | Ai dùng | Validation & Quy tắc chính |
 |---|---|---|---|---|
 | [x] | Chuẩn hóa Response lỗi & Phân trang | `dto/response`, `GlobalExceptionHandler`, `PageableFactory` | Hệ thống | Trả `{timestamp, status, code, error, message, path, errors{field}}` cho 400, 401, 403, 404, 405, 409, 413, 415, 422, 423; phân trang `page, size (max 100), sort` |
-| [ ] | Hạ tầng Upload File | `service/FileStorageService` + `LocalFileStorageService` | Hệ thống | Lưu local theo `UPLOAD_DIR` (dễ mở rộng S3), whitelist đuôi & MIME, giới hạn dung lượng, đổi tên UUID |
+| [x] | Hạ tầng Upload File | `service/FileStorageService` + `service/impl/LocalFileStorageService` | Hệ thống | Lưu local theo `UPLOAD_DIR` (dễ mở rộng S3), whitelist đuôi & MIME + magic bytes, giới hạn dung lượng, đổi tên UUID |
 | [ ] | Cấu hình Security, CORS, JWT Filter & Swagger Bearer | `SecurityConfig`, `JwtService`, `OpenApiConfig` | Hệ thống | Stateless, BCrypt, trả JSON 401/403, `permitAll` cho `/api/v1/auth/**` & Swagger UI, thêm Bearer JWT vào Swagger |
 | [ ] | Seed tài khoản Manager đầu tiên | `DataSeeder` | Hệ thống | Tạo sẵn 1 `LOGISTICS_MANAGER` từ `.env` nếu DB chưa có |
 | [ ] | Đăng ký khách hàng | `POST /api/v1/auth/register` | Công khai | Email lowercase, unique, ≤ 150 ký tự; mật khẩu 8–72 ký tự (hoa, thường, số); phone `+?[0-9]{8,15}`; tạo `User(CUSTOMER)` + `Customer` |
@@ -147,6 +147,6 @@ Tài liệu theo dõi tiến độ triển khai Backend theo thứ tự ưu tiê
 <!-- AUTO-GENERATED-PROGRESS:START -->
 > Tự động cập nhật bởi `java scripts/SyncDocs.java`.
 
-- **Tiến độ checklist:** `5/62` hạng mục (8%)
-- **Thành phần đã có trong code:** `0` Controllers (`0` endpoints), `0` Services, `0` Repositories
+- **Tiến độ checklist:** `6/62` hạng mục (10%)
+- **Thành phần đã có trong code:** `0` Controllers (`0` endpoints), `2` Services, `2` Repositories
 <!-- AUTO-GENERATED-PROGRESS:END -->
