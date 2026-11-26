@@ -6,6 +6,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.support.TransactionOperations;
 import umastar.config.SeedProperties.AccountCredentials;
 import umastar.entity.Customer;
 import umastar.entity.User;
@@ -25,6 +26,8 @@ import java.util.regex.Pattern;
  * - Moi role chi seed neu duoc cau hinh du email & password trong .env (de trong se tu bo qua).
  * - Rieng role CUSTOMER se tao kem ho so Customer (1-1) de dat don/them ngua duoc ngay.
  * - An toan khi khoi dong lai: da co user cua role do thi bo qua. Khong ghi mat khau ra log.
+ * - User va ho so Customer duoc luu trong CUNG MOT transaction: loi giua chung thi khong de lai user mo coi
+ *   (neu khong, lan khoi dong sau thay da co role CUSTOMER se bo qua va khong bao gio tao lai ho so).
  */
 @Component
 public class DataSeeder implements CommandLineRunner {
@@ -45,15 +48,18 @@ public class DataSeeder implements CommandLineRunner {
     private final CustomerRepository customerRepository;
     private final PasswordEncoder passwordEncoder;
     private final SeedProperties seedProperties;
+    private final TransactionOperations transactionOperations;
 
     public DataSeeder(UserRepository userRepository,
                       CustomerRepository customerRepository,
                       PasswordEncoder passwordEncoder,
-                      SeedProperties seedProperties) {
+                      SeedProperties seedProperties,
+                      TransactionOperations transactionOperations) {
         this.userRepository = userRepository;
         this.customerRepository = customerRepository;
         this.passwordEncoder = passwordEncoder;
         this.seedProperties = seedProperties;
+        this.transactionOperations = transactionOperations;
     }
 
     @Override
@@ -107,14 +113,18 @@ public class DataSeeder implements CommandLineRunner {
         user.setEmailVerified(true);
 
         try {
-            User saved = userRepository.save(user);
-            if (role == Role.CUSTOMER) {
-                Customer customer = new Customer();
-                customer.setUser(saved);
-                customer.setOrganizationName("CLB Ngựa Đua UmaStar (Demo)");
-                customer.setCustomerType(CustomerType.CLUB);
-                customerRepository.save(customer);
-            }
+            // Goi qua TransactionOperations (khong dung @Transactional) vi seedRoleAccount duoc goi noi bo trong cung bean,
+            // proxy cua Spring se khong can thiep.
+            transactionOperations.executeWithoutResult(status -> {
+                User saved = userRepository.save(user);
+                if (role == Role.CUSTOMER) {
+                    Customer customer = new Customer();
+                    customer.setUser(saved);
+                    customer.setOrganizationName("CLB Ngựa Đua UmaStar (Demo)");
+                    customer.setCustomerType(CustomerType.CLUB);
+                    customerRepository.save(customer);
+                }
+            });
         } catch (DataIntegrityViolationException e) {
             log.warn("Tai khoan seed cho role {} da duoc tao boi tien trinh khac, bo qua", role);
             return false;
