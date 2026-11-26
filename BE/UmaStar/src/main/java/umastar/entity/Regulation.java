@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.time.*;
 import java.util.*;
+import java.util.stream.Collectors;
 import umastar.enums.*;
 
 @Entity
@@ -32,11 +33,9 @@ public class Regulation extends BaseEntity {
     @Column(columnDefinition = "text")
     private String description;
 
-    @Enumerated(EnumType.STRING)
-    @ElementCollection(fetch = FetchType.LAZY)
-    @CollectionTable(name = "regulation_required_docs",
-            joinColumns = @JoinColumn(name = "regulation_id"))
-    @Column(name = "doc_type", length = 30)
+    /** Danh sách loại giấy tờ bắt buộc, lưu gọn trong 1 cột của bảng regulations. */
+    @Convert(converter = DocTypeSetConverter.class)
+    @Column(name = "required_doc_types", columnDefinition = "text")
     private Set<DocType> requiredDocTypes = new HashSet<>();
 
     @Column(name = "quarantine_days")
@@ -51,4 +50,31 @@ public class Regulation extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "updated_by")
     private User updatedBy;
+
+    @Converter
+    static class DocTypeSetConverter implements AttributeConverter<Set<DocType>, String> {
+
+        @Override
+        public String convertToDatabaseColumn(Set<DocType> attribute) {
+            if (attribute == null || attribute.isEmpty()) {
+                return null;
+            }
+            return attribute.stream()
+                    .map(Enum::name)
+                    .sorted()
+                    .collect(Collectors.joining(","));
+        }
+
+        @Override
+        public Set<DocType> convertToEntityAttribute(String dbData) {
+            if (dbData == null || dbData.isBlank()) {
+                return new HashSet<>();
+            }
+            return Arrays.stream(dbData.split(","))
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .map(DocType::valueOf)
+                    .collect(Collectors.toCollection(HashSet::new));
+        }
+    }
 }

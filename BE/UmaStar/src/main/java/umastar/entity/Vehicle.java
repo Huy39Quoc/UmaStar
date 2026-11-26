@@ -5,7 +5,8 @@ import lombok.*;
 import umastar.enums.*;
 
 @Entity
-@Table(name = "vehicles")
+@Table(name = "vehicles",
+        uniqueConstraints = @UniqueConstraint(name = "uk_vehicles_code_or_plate", columnNames = {"code_or_plate"}))
 @Getter @Setter @NoArgsConstructor
 public class Vehicle extends BaseEntity {
 
@@ -13,7 +14,7 @@ public class Vehicle extends BaseEntity {
     @Column(name = "vehicle_type", nullable = false, length = 20)
     private VehicleType vehicleType;
 
-    @Column(name = "code_or_plate", nullable = false, unique = true, length = 50)
+    @Column(name = "code_or_plate", nullable = false, length = 50)
     private String codeOrPlate;
 
     @Column(name = "capacity_horses", nullable = false)

@@ -3,7 +3,7 @@
 Tài liệu này giải thích **quan hệ giữa các Entity** và **công dụng của từng thuộc tính** trong hệ thống **Quản lý Vận chuyển Ngựa đua Xuyên Quốc gia (UmaStar)**.
 
 > **Ghi chú chung (`BaseEntity`):**
-> Tất cả 21 entity còn lại đều kế thừa từ `BaseEntity`, nên mặc định đều có 3 cột:
+> Tất cả 20 entity còn lại đều kế thừa từ `BaseEntity`, nên mặc định đều có 3 cột:
 > - `id` (`UUID`, khóa chính): Định danh duy nhất tự sinh (`GenerationType.UUID`).
 > - `created_at` (`Instant`): Thời điểm tạo bản ghi (tự động gán).
 > - `updated_at` (`Instant`): Thời điểm cập nhật bản ghi gần nhất (tự động cập nhật).
@@ -16,7 +16,6 @@ Tài liệu này giải thích **quan hệ giữa các Entity** và **công dụ
 erDiagram
     User ||--o| Customer : "1-1 (nếu role=CUSTOMER)"
     User ||--o{ RefreshToken : "có nhiều phiên đăng nhập"
-    User ||--o{ PasswordResetToken : "yêu cầu đặt lại mật khẩu"
 
     Country ||--o{ City : "gồm nhiều thành phố/cửa khẩu"
     Country ||--o{ Regulation : "quy định theo quốc gia"
@@ -72,6 +71,9 @@ Lưu tài khoản đăng nhập cho toàn bộ actor trong hệ thống (`LOGIST
 - `lockedUntil` (`locked_until`): Thời điểm hết hạn khóa tài khoản.
 - `lastLoginAt` (`last_login_at`): Lần đăng nhập thành công gần nhất.
 - `passwordChangedAt` (`password_changed_at`): Thời điểm đổi mật khẩu gần nhất (hỗ trợ vô hiệu hóa token cũ).
+- `resetTokenHash` (`reset_token_hash`): Mã băm SHA-256 của token đặt lại mật khẩu dùng 1 lần (`null` khi chưa yêu cầu hoặc đã dùng xong).
+- `resetTokenExpiresAt` (`reset_token_expires_at`): Thời điểm hết hạn của reset token.
+- `resetRequestedAt` (`reset_requested_at`): Thời điểm gửi yêu cầu quên mật khẩu gần nhất (hỗ trợ giới hạn tần suất gửi).
 
 ### `Customer` (Bảng `customers`)
 Hồ sơ pháp nhân/tổ chức của khách hàng. Quan hệ **1-1** với `User` (`user_id` unique) và **N-1** với `Country`.
@@ -92,13 +94,6 @@ Quản lý Refresh Token theo cơ chế rotation (lưu SHA-256 hash). Quan hệ 
 - `replacedByTokenId` (`replaced_by_token_id`): ID token mới thay thế khi xoay vòng.
 - `deviceInfo`, `userAgent`, `ipAddress`: Thông tin thiết bị và IP đăng nhập.
 - `lastUsedAt` (`last_used_at`): Lần sử dụng gần nhất.
-
-### `PasswordResetToken` (Bảng `password_reset_tokens`)
-Token đặt lại mật khẩu dùng một lần. Quan hệ **N-1** với `User`.
-- `user`: Tài khoản yêu cầu đặt lại mật khẩu.
-- `tokenHash` (`token_hash`): Mã băm token (duy nhất).
-- `expiresAt` (`expires_at`): Thời điểm hết hạn.
-- `usedAt` (`used_at`): Thời điểm đã sử dụng (`null` nếu chưa dùng).
 
 ---
 
@@ -129,7 +124,7 @@ Danh mục quy định y tế, kiểm dịch và hải quan do Transport Special
 - `checkpointName` (`checkpoint_name`): Tên cửa khẩu / trạm kiểm dịch / sân bay.
 - `requirementType` (`requirement_type`, `RequirementType`): Loại quy định (`HEALTH`, `QUARANTINE`, `CUSTOMS`).
 - `description`: Nội dung chi tiết quy định.
-- `requiredDocTypes` (`regulation_required_docs`): Tập hợp các loại giấy tờ bắt buộc (`DocType`).
+- `requiredDocTypes` (`required_doc_types`): Tập hợp các loại giấy tờ bắt buộc (`DocType`), lưu gọn trong 1 cột của `regulations` qua `DocTypeSetConverter`.
 - `quarantineDays` (`quarantine_days`): Số ngày cách ly kiểm dịch bắt buộc (nếu có).
 - `effectiveDate` (`effective_date`): Ngày quy định bắt đầu có hiệu lực.
 - `active`: Quy định còn hiệu lực hay không.
@@ -319,7 +314,7 @@ Thông báo gửi tới người dùng (nhắc bổ sung hồ sơ, cập nhật 
 > Phần dưới đây được đồng bộ tự động từ toàn bộ mã nguồn Java bằng lệnh `java scripts/SyncDocs.java`. Không sửa tay trong khối `AUTO-GENERATED`.
 
 <!-- AUTO-GENERATED:START -->
-Cập nhật từ toàn bộ mã nguồn: `src/main/java/umastar/**` (`22` entities/superclasses, `23` enums).
+Cập nhật từ toàn bộ mã nguồn: `src/main/java/umastar/**` (`21` entities/superclasses, `26` enums).
 
 ### Danh sách Entity
 
@@ -344,7 +339,7 @@ Cập nhật từ toàn bộ mã nguồn: `src/main/java/umastar/**` (`22` entit
 #### `Country` — Bảng: `countries`
 | Field | Kiểu | Ghi chú / Annotation |
 |---|---|---|
-| `isoCode` | `String` | @Column(name = "iso_code", nullable = false, unique = true, length = 2) |
+| `isoCode` | `String` | @Column(name = "iso_code", nullable = false, length = 2) |
 | `name` | `String` | @Column(nullable = false, length = 100) |
 | `nameVi` | `String` | @Column(name = "name_vi", length = 100) |
 | `homeCountry` | `boolean` | @Column(name = "home_country", nullable = false) |
@@ -385,7 +380,7 @@ Cập nhật từ toàn bộ mã nguồn: `src/main/java/umastar/**` (`22` entit
 |---|---|---|
 | `customer` | `Customer` | @ManyToOne(fetch = FetchType.LAZY, optional = false) @JoinColumn(name = "customer_id", ... |
 | `name` | `String` | @Column(nullable = false, length = 150) |
-| `microchipNo` | `String` | @Column(name = "microchip_no", nullable = false, unique = true, length = 50) |
+| `microchipNo` | `String` | @Column(name = "microchip_no", nullable = false, length = 50) |
 | `passportNo` | `String` | @Column(name = "passport_no", length = 50) |
 | `breed` | `String` | @Column(length = 100) |
 | `sex` | `HorseSex` | @Enumerated(EnumType.STRING) @Column(length = 20) |
@@ -464,14 +459,6 @@ Cập nhật từ toàn bộ mã nguồn: `src/main/java/umastar/**` (`22` entit
 | `stallNumber` | `String` | @Column(name = "stall_number", length = 20) |
 | `specialNote` | `String` | @Column(name = "special_note", columnDefinition = "text") |
 
-#### `PasswordResetToken` — Bảng: `password_reset_tokens`
-| Field | Kiểu | Ghi chú / Annotation |
-|---|---|---|
-| `user` | `User` | @ManyToOne(fetch = FetchType.LAZY, optional = false) @JoinColumn(name = "user_id", null... |
-| `tokenHash` | `String` | @Column(name = "token_hash", nullable = false, unique = true, length = 128) |
-| `expiresAt` | `Instant` | @Column(name = "expires_at", nullable = false) |
-| `usedAt` | `Instant` | @Column(name = "used_at") |
-
 #### `RefreshToken` — Bảng: `refresh_tokens`
 | Field | Kiểu | Ghi chú / Annotation |
 |---|---|---|
@@ -496,7 +483,7 @@ Cập nhật từ toàn bộ mã nguồn: `src/main/java/umastar/**` (`22` entit
 | `checkpointName` | `String` | @Column(name = "checkpoint_name", length = 200) |
 | `requirementType` | `RequirementType` | @Enumerated(EnumType.STRING) @Column(name = "requirement_type", nullable = false, lengt... |
 | `description` | `String` | @Column(columnDefinition = "text") |
-| `requiredDocTypes` | `Set<DocType>` | @Column(name = "doc_type", length = 30) |
+| `requiredDocTypes` | `Set<DocType>` | Danh sách loại giấy tờ bắt buộc, lưu gọn trong 1 cột của bảng regulations. — @Convert(converter = DocTypeSetConverter.class) @Column(name = "required_doc_types", co... |
 | `quarantineDays` | `Integer` | @Column(name = "quarantine_days") |
 | `effectiveDate` | `LocalDate` | @Column(name = "effective_date") |
 | `active` | `boolean` | @Column(nullable = false) |
@@ -611,7 +598,7 @@ Cập nhật từ toàn bộ mã nguồn: `src/main/java/umastar/**` (`22` entit
 | Field | Kiểu | Ghi chú / Annotation |
 |---|---|---|
 | `fullName` | `String` | @Column(name = "full_name", nullable = false, length = 150) |
-| `email` | `String` | @Column(nullable = false, unique = true, length = 150) |
+| `email` | `String` | @Column(nullable = false, length = 150) |
 | `phone` | `String` | @Column(length = 30) |
 | `passwordHash` | `String` | @Column(name = "password_hash", nullable = false) |
 | `role` | `Role` | @Enumerated(EnumType.STRING) @Column(nullable = false, length = 30) |
@@ -621,12 +608,15 @@ Cập nhật từ toàn bộ mã nguồn: `src/main/java/umastar/**` (`22` entit
 | `lockedUntil` | `Instant` | @Column(name = "locked_until") |
 | `lastLoginAt` | `Instant` | @Column(name = "last_login_at") |
 | `passwordChangedAt` | `Instant` | @Column(name = "password_changed_at") |
+| `resetTokenHash` | `String` | @Column(name = "reset_token_hash", length = 128) |
+| `resetTokenExpiresAt` | `Instant` | @Column(name = "reset_token_expires_at") |
+| `resetRequestedAt` | `Instant` | @Column(name = "reset_requested_at") |
 
 #### `Vehicle` — Bảng: `vehicles`
 | Field | Kiểu | Ghi chú / Annotation |
 |---|---|---|
 | `vehicleType` | `VehicleType` | @Enumerated(EnumType.STRING) @Column(name = "vehicle_type", nullable = false, length = 20) |
-| `codeOrPlate` | `String` | @Column(name = "code_or_plate", nullable = false, unique = true, length = 50) |
+| `codeOrPlate` | `String` | @Column(name = "code_or_plate", nullable = false, length = 50) |
 | `capacityHorses` | `int` | @Column(name = "capacity_horses", nullable = false) |
 | `carrierName` | `String` | @Column(name = "carrier_name", length = 200) |
 | `status` | `VehicleStatus` | @Enumerated(EnumType.STRING) @Column(nullable = false, length = 20) |
@@ -636,11 +626,14 @@ Cập nhật từ toàn bộ mã nguồn: `src/main/java/umastar/**` (`22` entit
 
 | Enum | Giá trị |
 |---|---|
+| `AllowedFileType` | `PDF`, `Set.of`, `"pdf")`, `JPEG`, `Set.of`, `"image/pjpeg")`, `"jpg"`, `"jpeg")`, `PNG`, `Set.of`, `"png")` |
 | `ApprovalStatus` | `MISSING`, `SUBMITTED`, `UNDER_REVIEW`, `APPROVED`, `REJECTED` |
 | `AssignmentRole` | `DRIVER`, `ESCORT`, `SPECIALIST`, `COORDINATOR` |
 | `ChangeRequestStatus` | `PENDING`, `APPROVED`, `REJECTED` |
 | `CustomerType` | `CLUB`, `INDIVIDUAL` |
 | `DocType` | `VACCINATION_CERT`, `HORSE_PASSPORT`, `EXPORT_PERMIT`, `IMPORT_PERMIT`, `HEALTH_CERT`, `OTHER` |
+| `ErrorCode` | `INVALID_CREDENTIALS`, `"Email`, `HttpStatus.UNAUTHORIZED)`, `UNAUTHORIZED`, `"Vui`, `HttpStatus.UNAUTHORIZED)`, `FORBIDDEN`, `"Bạn`, `HttpStatus.FORBIDDEN)`, `ACCOUNT_LOCKED`, `"Tài`, `HttpStatus.LOCKED)`, `ACCOUNT_DISABLED`, `"Tài`, `HttpStatus.FORBIDDEN)`, `INVALID_TOKEN`, `"Phiên`, `HttpStatus.UNAUTHORIZED)`, `TOKEN_EXPIRED`, `"Phiên`, `HttpStatus.UNAUTHORIZED)`, `INVALID_REFRESH_TOKEN`, `"Phiên`, `HttpStatus.UNAUTHORIZED)`, `REFRESH_TOKEN_REVOKED`, `"Phiên`, `HttpStatus.UNAUTHORIZED)`, `INVALID_RESET_TOKEN`, `"Mã`, `HttpStatus.BAD_REQUEST)`, `USER_NOT_FOUND`, `"Không`, `HttpStatus.NOT_FOUND)`, `EMAIL_ALREADY_EXISTS`, `"Email`, `HttpStatus.CONFLICT)`, `INVALID_STAFF_ROLE`, `"Vai`, `HttpStatus.BAD_REQUEST)`, `CANNOT_DEACTIVATE_SELF`, `"Bạn`, `HttpStatus.CONFLICT)`, `LAST_MANAGER_PROTECTED`, `"Không`, `HttpStatus.CONFLICT)`, `INVALID_OLD_PASSWORD`, `"Mật`, `HttpStatus.BAD_REQUEST)`, `NEW_PASSWORD_SAME_AS_OLD`, `"Mật`, `HttpStatus.BAD_REQUEST)`, `PASSWORD_MISMATCH`, `"Mật`, `HttpStatus.BAD_REQUEST)`, `FILE_TOO_LARGE`, `"File`, `HttpStatus.valueOf`, `UNSUPPORTED_FILE_TYPE`, `"Định`, `HttpStatus.UNSUPPORTED_MEDIA_TYPE)`, `INVALID_FILE_NAME`, `"Tên`, `HttpStatus.BAD_REQUEST)`, `FILE_NOT_FOUND`, `"Không`, `HttpStatus.NOT_FOUND)`, `FILE_STORAGE_ERROR`, `"Không`, `vui`, `HttpStatus.INTERNAL_SERVER_ERROR)`, `INTERNAL_SERVER_ERROR`, `"Lỗi`, `vui`, `HttpStatus.INTERNAL_SERVER_ERROR)`, `INVALID_REQUEST`, `"Yêu`, `HttpStatus.BAD_REQUEST)`, `VALIDATION_FAILED`, `"Dữ`, `HttpStatus.BAD_REQUEST)`, `METHOD_NOT_ALLOWED`, `"Phương`, `HttpStatus.METHOD_NOT_ALLOWED)`, `UNSUPPORTED_MEDIA_TYPE`, `"Content-Type`, `HttpStatus.UNSUPPORTED_MEDIA_TYPE)`, `RESOURCE_NOT_FOUND`, `"Không`, `HttpStatus.NOT_FOUND)`, `CONCURRENT_UPDATE`, `"Dữ`, `HttpStatus.CONFLICT)`, `DATA_INTEGRITY_VIOLATION`, `"Dữ`, `HttpStatus.CONFLICT)`, `RESOURCE_IN_USE`, `"Dữ`, `HttpStatus.CONFLICT)`, `INVALID_STATE_TRANSITION`, `"Không`, `HttpStatus.CONFLICT)`, `BUSINESS_RULE_VIOLATION`, `"Vi`, `HttpStatus.valueOf`, `TOO_MANY_REQUESTS`, `"Thao`, `vui`, `HttpStatus.TOO_MANY_REQUESTS)`, `COUNTRY_NOT_FOUND`, `"Không`, `HttpStatus.NOT_FOUND)`, `COUNTRY_CODE_ALREADY_EXISTS`, `"Mã`, `HttpStatus.CONFLICT)`, `HOME_COUNTRY_ALREADY_EXISTS`, `"Hệ`, `HttpStatus.CONFLICT)`, `CITY_NOT_FOUND`, `"Không`, `HttpStatus.NOT_FOUND)`, `CITY_NAME_ALREADY_EXISTS`, `"Tên`, `HttpStatus.CONFLICT)`, `CITY_NOT_IN_COUNTRY`, `"Thành`, `HttpStatus.BAD_REQUEST)`, `INVALID_TIMEZONE`, `"Múi`, `HttpStatus.BAD_REQUEST)`, `COUNTRY_NOT_PARTNER`, `"Quốc`, `HttpStatus.BAD_REQUEST)`, `VEHICLE_NOT_FOUND`, `"Không`, `HttpStatus.NOT_FOUND)`, `VEHICLE_CODE_ALREADY_EXISTS`, `"Biển`, `HttpStatus.CONFLICT)`, `VEHICLE_IN_USE`, `"Phương`, `HttpStatus.CONFLICT)`, `VEHICLE_NOT_AVAILABLE`, `"Phương`, `HttpStatus.CONFLICT)`, `REGULATION_NOT_FOUND`, `"Không`, `HttpStatus.NOT_FOUND)`, `REGULATION_DOCS_REQUIRED`, `"Quy`, `HttpStatus.BAD_REQUEST)`, `CUSTOMER_NOT_FOUND`, `"Không`, `HttpStatus.NOT_FOUND)`, `HORSE_NOT_FOUND`, `"Không`, `HttpStatus.NOT_FOUND)`, `MICROCHIP_ALREADY_EXISTS`, `"Số`, `HttpStatus.CONFLICT)`, `HORSE_IN_ACTIVE_ORDER`, `"Ngựa`, `HttpStatus.CONFLICT)`, `NOTIFICATION_NOT_FOUND`, `"Không`, `HttpStatus.NOT_FOUND)` |
+| `FileCategory` | `/**`, `10`, `EnumSet.of`, `AllowedFileType.JPEG`, `AllowedFileType.PNG))`, `/**`, `anh`, `anh`, `5`, `6).`, `5`, `EnumSet.of`, `AllowedFileType.PNG))`, `/**`, `2`, `EnumSet.of`, `AllowedFileType.PNG))` |
 | `HorseCondition` | `STABLE`, `NOT_EATING`, `STRESSED`, `CLIMATE_CHANGE` |
 | `HorseSex` | `STALLION`, `MARE`, `GELDING`, `COLT`, `FILLY` |
 | `IncidentStatus` | `OPEN`, `HANDLING`, `RESOLVED` |

@@ -10,11 +10,12 @@ import java.util.*;
  * - partner     = true  : nước đã hợp tác        -> dùng cho đơn QUỐC TẾ
  */
 @Entity
-@Table(name = "countries")
+@Table(name = "countries",
+        uniqueConstraints = @UniqueConstraint(name = "uk_countries_iso_code", columnNames = {"iso_code"}))
 @Getter @Setter @NoArgsConstructor
 public class Country extends BaseEntity {
 
-    @Column(name = "iso_code", nullable = false, unique = true, length = 2)
+    @Column(name = "iso_code", nullable = false, length = 2)
     private String isoCode;
 
     @Column(nullable = false, length = 100)
