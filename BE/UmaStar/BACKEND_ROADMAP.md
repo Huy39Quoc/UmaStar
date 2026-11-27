@@ -25,7 +25,7 @@ Tài liệu theo dõi tiến độ triển khai Backend theo thứ tự ưu tiê
 | [x] | Hạ tầng Upload File | `service/FileStorageService` + `service/impl/LocalFileStorageService` | Hệ thống | Lưu local theo `UPLOAD_DIR` (dễ mở rộng S3), whitelist đuôi & MIME + magic bytes, giới hạn dung lượng, đổi tên UUID |
 | [x] | Cấu hình Security, CORS, JWT Filter & Swagger Bearer | `SecurityConfig`, `CorsConfig`, `JwtAuthenticationFilter`, `JwtService`, `OpenApiConfig` | Hệ thống | Stateless, BCrypt, CORS theo `CORS_ALLOWED_ORIGINS`, trả JSON 401/403, `permitAll` cho `/api/v1/auth/**` (trừ `/logout-all`, `/change-password`) & Swagger UI |
 | [x] | Seed tài khoản mẫu theo từng Role | `DataSeeder`, `SeedProperties` | Hệ thống | Tạo sẵn tài khoản cho từng `Role` cấu hình trong `.env` (kèm `Customer` profile cho `CUSTOMER`) nếu DB chưa có |
-| [ ] | Đăng ký khách hàng | `POST /api/v1/auth/register` | Công khai | Email lowercase, unique, ≤ 150 ký tự; mật khẩu 8–72 ký tự (hoa, thường, số); phone `+?[0-9]{8,15}`; tạo `User(CUSTOMER)` + `Customer` |
+| [x] | Đăng ký khách hàng | `POST /api/v1/auth/register` | Công khai | Email lowercase, unique, ≤ 150 ký tự; mật khẩu 8–72 ký tự (hoa, thường, số); phone `+?[0-9]{8,15}`; tạo `User(CUSTOMER)` + `Customer` |
 | [ ] | Đăng nhập | `POST /api/v1/auth/login` | Công khai | Account phải `ACTIVE`; kiểm tra `lockedUntil`; sai 5 lần khóa 15 phút; thành công reset counter + ghi `lastLoginAt`; lỗi chung chung |
 | [ ] | Làm mới token (Rotation) | `POST /api/v1/auth/refresh` | Công khai | Tìm SHA-256 hash, chưa revoke, chưa hết hạn; thu hồi token cũ, gán `replacedByTokenId`, cấp mới cùng `familyId`; dùng lại token đã revoke → revoke cả family |
 | [ ] | Đăng xuất | `POST /api/v1/auth/logout`, `/logout-all` | Đã đăng nhập | Revoke token hiện tại hoặc toàn bộ token của user (ghi `revokedReason`) |
@@ -147,6 +147,12 @@ Tài liệu theo dõi tiến độ triển khai Backend theo thứ tự ưu tiê
 <!-- AUTO-GENERATED-PROGRESS:START -->
 > Tự động cập nhật bởi `java scripts/SyncDocs.java`.
 
-- **Tiến độ checklist:** `8/62` hạng mục (13%)
-- **Thành phần đã có trong code:** `0` Controllers (`0` endpoints), `2` Services, `3` Repositories
+- **Tiến độ checklist:** `9/62` hạng mục (15%)
+- **Thành phần đã có trong code:** `1` Controllers (`1` endpoints), `3` Services, `3` Repositories
+
+### Endpoints đã triển khai
+
+| Controller | Method | Path | Handler |
+|---|---|---|---|
+| `AuthController` | `POST` | `/api/v1/auth/register` | `register()` |
 <!-- AUTO-GENERATED-PROGRESS:END -->
