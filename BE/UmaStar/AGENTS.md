@@ -4,7 +4,7 @@
 Mọi mã nguồn nằm trong package gốc `umastar`, tổ chức theo tầng:
 - `umastar.config`: Cấu hình Spring (`SecurityConfig`, `OpenApiConfig`, ...).
 - `umastar.controller`: REST Controller với prefix `/api/v1`, chỉ nhận/trả DTO, không chứa logic nghiệp vụ.
-- `umastar.service` & `umastar.service.impl`: Interface nghiệp vụ đặt trong `umastar.service` (`<Domain>Service`), class triển khai đặt trong `umastar.service.impl` (`<Domain>ServiceImpl` hoặc `<Provider><Domain>Service`), chứa `@Transactional`, kiểm tra quyền sở hữu và gọi State Machine.
+- `umastar.service` & `umastar.service.impl`: Interface nghiệp vụ đặt trong `umastar.service` (`<Domain>Service`), class triển khai đặt trong `umastar.service.impl` (`<Domain>ServiceImpl`), chứa `@Transactional`, kiểm tra quyền sở hữu và gọi State Machine.
 - `umastar.repository`: Spring Data JPA Repository (`*Repository`), dùng `@EntityGraph` hoặc `JOIN FETCH` cho truy vấn danh sách.
 - `umastar.dto.request` & `umastar.dto.response`: Tách riêng DTO đầu vào (`*Request`) và đầu ra (`*Response` dùng `record` nếu bất biến). Không trả Entity trực tiếp ra API.
 - `umastar.mapper`: Lớp chuyển đổi DTO ↔ Entity (`<Domain>Mapper`), chỉ ánh xạ dữ liệu, không chứa truy vấn DB hay logic nghiệp vụ.

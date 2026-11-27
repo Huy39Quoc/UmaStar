@@ -3,12 +3,11 @@ package umastar.dto.request;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import umastar.enums.CustomerType;
+import umastar.util.InputNormalizer;
 import umastar.validation.StrongPassword;
-
-import java.util.Locale;
+import umastar.validation.ValidPhone;
 
 /**
  * Yêu cầu đăng ký tài khoản khách hàng (CLB hoặc cá nhân chủ ngựa).
@@ -30,7 +29,7 @@ public record RegisterRequest(
         @StrongPassword
         String password,
 
-        @Pattern(regexp = "\\+?[0-9]{8,15}", message = "Số điện thoại gồm 8-15 chữ số, có thể bắt đầu bằng dấu +")
+        @ValidPhone
         String phone,
 
         @NotBlank(message = "Vui lòng nhập tên tổ chức hoặc chủ ngựa")
@@ -41,19 +40,10 @@ public record RegisterRequest(
         CustomerType customerType) {
 
     public RegisterRequest {
-        fullName = trim(fullName);
-        email = email == null ? null : email.trim().toLowerCase(Locale.ROOT);
-        phone = blankToNull(phone);
-        organizationName = trim(organizationName);
-    }
-
-    private static String trim(String value) {
-        return value == null ? null : value.trim();
-    }
-
-    private static String blankToNull(String value) {
-        String trimmed = trim(value);
-        return trimmed == null || trimmed.isEmpty() ? null : trimmed;
+        fullName = InputNormalizer.trim(fullName);
+        email = InputNormalizer.normalizeEmail(email);
+        phone = InputNormalizer.blankToNull(phone);
+        organizationName = InputNormalizer.trim(organizationName);
     }
 
     /** Che mật khẩu để lỡ ghi log đối tượng này cũng không lộ thông tin. */

@@ -2,8 +2,7 @@ package umastar.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-
-import java.util.Locale;
+import umastar.util.InputNormalizer;
 
 /**
  * Yêu cầu đăng nhập. Chỉ kiểm tra "có nhập" và độ dài tối đa, KHÔNG kiểm tra chính sách mật khẩu hay định dạng email:
@@ -21,7 +20,7 @@ public record LoginRequest(
         String password) {
 
     public LoginRequest {
-        email = email == null ? null : email.trim().toLowerCase(Locale.ROOT);
+        email = InputNormalizer.normalizeEmail(email);
     }
 
     /** Che mật khẩu để lỡ ghi log đối tượng này cũng không lộ thông tin. */

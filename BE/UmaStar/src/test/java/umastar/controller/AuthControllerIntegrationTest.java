@@ -1,12 +1,15 @@
 package umastar.controller;
 
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,12 +21,16 @@ import umastar.exception.ErrorCode;
 import umastar.repository.CustomerRepository;
 import umastar.repository.RefreshTokenRepository;
 import umastar.repository.UserRepository;
+import umastar.service.MailService;
 import umastar.util.TokenHasher;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -32,6 +39,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Transactional
 class AuthControllerIntegrationTest {
 
+    private static final Pattern ACCESS_TOKEN_PATTERN = Pattern.compile("\"accessToken\":\"([^\"]+)\"");
     private static final Pattern REFRESH_TOKEN_PATTERN = Pattern.compile("\"refreshToken\":\"([^\"]+)\"");
 
     @Autowired
@@ -46,10 +54,17 @@ class AuthControllerIntegrationTest {
     @Autowired
     private RefreshTokenRepository refreshTokenRepository;
 
+    @Autowired
+    private EntityManager entityManager;
+
+    @MockitoSpyBean
+    private MailService mailService;
+
     private MockMvc mockMvc;
 
     @BeforeEach
     void setUp() {
+        reset(mailService);
         mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
                 .apply(SecurityMockMvcConfigurers.springSecurity())
                 .build();
@@ -192,10 +207,7 @@ class AuthControllerIntegrationTest {
                 .getResponse()
                 .getContentAsString();
 
-        Matcher matcher = REFRESH_TOKEN_PATTERN.matcher(json);
-        assertTrue(matcher.find());
-        String rawRefreshToken = matcher.group(1);
-
+        String rawRefreshToken = extractRefreshToken(json);
         RefreshToken stored = refreshTokenRepository.findByTokenHash(TokenHasher.sha256Hex(rawRefreshToken))
                 .orElseThrow();
         assertEquals("login.ok@umastar.local", stored.getUser().getEmail());
@@ -261,6 +273,298 @@ class AuthControllerIntegrationTest {
                         .content(loginBody))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.code").value(ErrorCode.ACCOUNT_DISABLED.getCode()));
+    }
+
+    @Test
+    void refreshRotatesTokenAndReuseRevokesEntireFamily() throws Exception {
+        registerAccount("refresh.ok@umastar.local", "Password1");
+        String firstRawToken = extractRefreshToken(loginJson("refresh.ok@umastar.local", "Password1"));
+
+        String refreshJson = mockMvc.perform(post("/api/v1/auth/refresh")
+                        .header(HttpHeaders.USER_AGENT, "IntegrationTest/2.0")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                { "refreshToken": "  %s  " }
+                                """.formatted(firstRawToken)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accessToken").isNotEmpty())
+                .andExpect(jsonPath("$.refreshToken").isNotEmpty())
+                .andExpect(jsonPath("$.tokenType").value("Bearer"))
+                .andExpect(jsonPath("$.user.email").value("refresh.ok@umastar.local"))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        String secondRawToken = extractRefreshToken(refreshJson);
+        assertNotEquals(firstRawToken, secondRawToken);
+
+        RefreshToken firstEntity = refreshTokenRepository.findByTokenHash(TokenHasher.sha256Hex(firstRawToken))
+                .orElseThrow();
+        RefreshToken secondEntity = refreshTokenRepository.findByTokenHash(TokenHasher.sha256Hex(secondRawToken))
+                .orElseThrow();
+        assertTrue(firstEntity.isRevoked());
+        assertEquals("ROTATED", firstEntity.getRevokedReason());
+        assertEquals(secondEntity.getId(), firstEntity.getReplacedByTokenId());
+        assertEquals(firstEntity.getFamilyId(), secondEntity.getFamilyId());
+        assertFalse(secondEntity.isRevoked());
+
+        mockMvc.perform(post("/api/v1/auth/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                { "refreshToken": "%s" }
+                                """.formatted(firstRawToken)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value(ErrorCode.REFRESH_TOKEN_REVOKED.getCode()));
+
+        entityManager.flush();
+        entityManager.clear();
+
+        mockMvc.perform(post("/api/v1/auth/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                { "refreshToken": "%s" }
+                                """.formatted(secondRawToken)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value(ErrorCode.REFRESH_TOKEN_REVOKED.getCode()));
+    }
+
+    @Test
+    void refreshUnknownOrBlankTokenReturnsExpectedError() throws Exception {
+        mockMvc.perform(post("/api/v1/auth/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                { "refreshToken": "non-existent-token" }
+                                """))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value(ErrorCode.INVALID_REFRESH_TOKEN.getCode()));
+
+        mockMvc.perform(post("/api/v1/auth/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                { "refreshToken": "   " }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(ErrorCode.VALIDATION_FAILED.getCode()))
+                .andExpect(jsonPath("$.errors.refreshToken").isNotEmpty());
+    }
+
+    @Test
+    void logoutSingleDeviceRevokesOnlyThatSessionAndIsIdempotent() throws Exception {
+        registerAccount("logout.one@umastar.local", "Password1");
+        String device1Token = extractRefreshToken(loginJson("logout.one@umastar.local", "Password1"));
+        String device2Token = extractRefreshToken(loginJson("logout.one@umastar.local", "Password1"));
+
+        mockMvc.perform(post("/api/v1/auth/logout")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                { "refreshToken": "%s" }
+                                """.formatted(device1Token)))
+                .andExpect(status().isNoContent());
+
+        mockMvc.perform(post("/api/v1/auth/logout")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                { "refreshToken": "%s" }
+                                """.formatted(device1Token)))
+                .andExpect(status().isNoContent());
+
+        entityManager.flush();
+        entityManager.clear();
+
+        RefreshToken revoked = refreshTokenRepository.findByTokenHash(TokenHasher.sha256Hex(device1Token))
+                .orElseThrow();
+        assertTrue(revoked.isRevoked());
+        assertEquals("LOGOUT", revoked.getRevokedReason());
+
+        mockMvc.perform(post("/api/v1/auth/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                { "refreshToken": "%s" }
+                                """.formatted(device2Token)))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void logoutAllRequiresAuthAndRevokesAllDevices() throws Exception {
+        mockMvc.perform(post("/api/v1/auth/logout-all"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value(ErrorCode.UNAUTHORIZED.getCode()));
+
+        registerAccount("logout.all@umastar.local", "Password1");
+        String session1Json = loginJson("logout.all@umastar.local", "Password1");
+        String accessToken = extractAccessToken(session1Json);
+        String refresh1 = extractRefreshToken(session1Json);
+        String refresh2 = extractRefreshToken(loginJson("logout.all@umastar.local", "Password1"));
+
+        mockMvc.perform(post("/api/v1/auth/logout-all")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken))
+                .andExpect(status().isNoContent());
+
+        entityManager.flush();
+        entityManager.clear();
+
+        RefreshToken token1 = refreshTokenRepository.findByTokenHash(TokenHasher.sha256Hex(refresh1)).orElseThrow();
+        RefreshToken token2 = refreshTokenRepository.findByTokenHash(TokenHasher.sha256Hex(refresh2)).orElseThrow();
+        assertTrue(token1.isRevoked());
+        assertTrue(token2.isRevoked());
+        assertEquals("LOGOUT_ALL", token1.getRevokedReason());
+        assertEquals("LOGOUT_ALL", token2.getRevokedReason());
+    }
+
+    @Test
+    void changePasswordRequiresAuthValidatesRulesAndRevokesSessions() throws Exception {
+        mockMvc.perform(post("/api/v1/auth/change-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                { "currentPassword": "Password1", "newPassword": "NewPassword2" }
+                                """))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value(ErrorCode.UNAUTHORIZED.getCode()));
+
+        registerAccount("changepw@umastar.local", "Password1");
+        String sessionJson = loginJson("changepw@umastar.local", "Password1");
+        String accessToken = extractAccessToken(sessionJson);
+        String refreshToken = extractRefreshToken(sessionJson);
+
+        mockMvc.perform(post("/api/v1/auth/change-password")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                { "currentPassword": "WrongPassword1", "newPassword": "NewPassword2" }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(ErrorCode.INVALID_OLD_PASSWORD.getCode()));
+
+        mockMvc.perform(post("/api/v1/auth/change-password")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                { "currentPassword": "Password1", "newPassword": "Password1" }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(ErrorCode.NEW_PASSWORD_SAME_AS_OLD.getCode()));
+
+        mockMvc.perform(post("/api/v1/auth/change-password")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                { "currentPassword": "Password1", "newPassword": "NewPassword2" }
+                                """))
+                .andExpect(status().isNoContent());
+
+        entityManager.flush();
+        entityManager.clear();
+
+        User updated = userRepository.findByEmailIgnoreCase("changepw@umastar.local").orElseThrow();
+        assertNotNull(updated.getPasswordChangedAt());
+        assertEquals(0, updated.getFailedLoginAttempts());
+
+        RefreshToken revoked = refreshTokenRepository.findByTokenHash(TokenHasher.sha256Hex(refreshToken)).orElseThrow();
+        assertTrue(revoked.isRevoked());
+        assertEquals("PASSWORD_CHANGED", revoked.getRevokedReason());
+
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                { "email": "changepw@umastar.local", "password": "NewPassword2" }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accessToken").isNotEmpty());
+    }
+
+    @Test
+    void forgotAndResetPasswordFlowEnforcesRateLimitClearsTokenAndRevokesSessions() throws Exception {
+        mockMvc.perform(post("/api/v1/auth/forgot-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                { "email": "nobody@umastar.local" }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").isNotEmpty());
+        verifyNoInteractions(mailService);
+
+        registerAccount("reset.flow@umastar.local", "Password1");
+        String refreshToken = extractRefreshToken(loginJson("reset.flow@umastar.local", "Password1"));
+
+        mockMvc.perform(post("/api/v1/auth/forgot-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                { "email": "  RESET.FLOW@UmaStar.Local " }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").isNotEmpty());
+
+        ArgumentCaptor<String> rawTokenCaptor = ArgumentCaptor.forClass(String.class);
+        verify(mailService).sendPasswordResetEmail(eq("reset.flow@umastar.local"), eq("Người Dùng Kiểm Thử"),
+                rawTokenCaptor.capture(), anyLong());
+        String rawResetToken = rawTokenCaptor.getValue();
+
+        // Gui lai ngay trong cooldown -> 429 Too Many Requests
+        mockMvc.perform(post("/api/v1/auth/forgot-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                { "email": "reset.flow@umastar.local" }
+                                """))
+                .andExpect(status().isTooManyRequests())
+                .andExpect(jsonPath("$.code").value(ErrorCode.TOO_MANY_REQUESTS.getCode()));
+
+        mockMvc.perform(post("/api/v1/auth/reset-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                { "token": "%s", "newPassword": "ResetPass2" }
+                                """.formatted(rawResetToken)))
+                .andExpect(status().isNoContent());
+
+        entityManager.flush();
+        entityManager.clear();
+
+        User updated = userRepository.findByEmailIgnoreCase("reset.flow@umastar.local").orElseThrow();
+        assertNull(updated.getResetTokenHash());
+        assertNull(updated.getResetTokenExpiresAt());
+        assertNull(updated.getResetRequestedAt());
+
+        RefreshToken revoked = refreshTokenRepository.findByTokenHash(TokenHasher.sha256Hex(refreshToken)).orElseThrow();
+        assertTrue(revoked.isRevoked());
+        assertEquals("PASSWORD_RESET", revoked.getRevokedReason());
+
+        // Dung lai token cu -> 400 INVALID_RESET_TOKEN
+        mockMvc.perform(post("/api/v1/auth/reset-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                { "token": "%s", "newPassword": "AnotherPass3" }
+                                """.formatted(rawResetToken)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(ErrorCode.INVALID_RESET_TOKEN.getCode()));
+
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                { "email": "reset.flow@umastar.local", "password": "ResetPass2" }
+                                """))
+                .andExpect(status().isOk());
+    }
+
+    private String loginJson(String email, String password) throws Exception {
+        return mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                { "email": "%s", "password": "%s" }
+                                """.formatted(email, password)))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+    }
+
+    private String extractAccessToken(String json) {
+        Matcher matcher = ACCESS_TOKEN_PATTERN.matcher(json);
+        assertTrue(matcher.find());
+        return matcher.group(1);
+    }
+
+    private String extractRefreshToken(String json) {
+        Matcher matcher = REFRESH_TOKEN_PATTERN.matcher(json);
+        assertTrue(matcher.find());
+        return matcher.group(1);
     }
 
     private void registerAccount(String email, String password) throws Exception {
