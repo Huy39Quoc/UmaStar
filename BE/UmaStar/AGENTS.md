@@ -4,17 +4,19 @@
 Mọi mã nguồn nằm trong package gốc `umastar`, tổ chức theo tầng:
 - `umastar.config`: Cấu hình Spring (`SecurityConfig`, `OpenApiConfig`, ...).
 - `umastar.controller`: REST Controller với prefix `/api/v1`, chỉ nhận/trả DTO, không chứa logic nghiệp vụ.
-- `umastar.service` & `umastar.service.impl`: Interface nghiệp vụ đặt trong `umastar.service` (`<Domain>Service`), class triển khai đặt trong `umastar.service.impl` (`<Domain>ServiceImpl` hoặc `<Provider><Domain>Service`), chứa `@Transactional`, kiểm tra quyền sở hữu và gọi State Machine.
+- `umastar.service` & `umastar.service.impl`: Interface nghiệp vụ đặt trong `umastar.service` (`<Domain>Service`), class triển khai đặt trong `umastar.service.impl` (`<Domain>ServiceImpl`), chứa `@Transactional`, kiểm tra quyền sở hữu và gọi State Machine.
 - `umastar.repository`: Spring Data JPA Repository (`*Repository`), dùng `@EntityGraph` hoặc `JOIN FETCH` cho truy vấn danh sách.
 - `umastar.dto.request` & `umastar.dto.response`: Tách riêng DTO đầu vào (`*Request`) và đầu ra (`*Response` dùng `record` nếu bất biến). Không trả Entity trực tiếp ra API.
+- `umastar.mapper`: Lớp chuyển đổi DTO ↔ Entity (`<Domain>Mapper`), chỉ ánh xạ dữ liệu, không chứa truy vấn DB hay logic nghiệp vụ.
 - `umastar.entity` & `umastar.enums`: Thực thể JPA kế thừa `BaseEntity` và các enum trạng thái/phân loại.
 - `umastar.exception`: `ErrorCode`, `AppException`, `GlobalExceptionHandler` (`@RestControllerAdvice`).
 - `umastar.security`: `JwtService`, `JwtAuthenticationFilter`, `UserDetailsService`, `SecurityUtils`.
+- `umastar.validation`: Annotation & Validator Bean Validation tùy chỉnh (`@StrongPassword`, ...).
 - `umastar.util`: Helper tĩnh dùng chung (`PageableFactory`, `SecureTokenGenerator`, `TokenHasher`, ...).
 
 ## 2. Quy ước đặt tên & thiết kế chuẩn
 - **Class / Record**:
-  - Controller: `<Domain>Controller`; Service interface: `<Domain>Service` (trong `umastar.service`); Service impl: `<Domain>ServiceImpl` (trong `umastar.service.impl`); Repository: `<Entity>Repository`.
+  - Controller: `<Domain>Controller`; Service interface: `<Domain>Service` (trong `umastar.service`); Service impl: `<Domain>ServiceImpl` (trong `umastar.service.impl`); Mapper: `<Domain>Mapper` (trong `umastar.mapper`); Repository: `<Entity>Repository`.
   - Request DTO: `<Action><Domain>Request` (VD: `CreateOrderRequest`, `LoginRequest`); Response DTO: `<Domain>Response` / `<Domain>DetailResponse`.
   - Handler trong `GlobalExceptionHandler`: bắt đầu bằng `handle*` (VD: `handleAppException`, `handleValidation`).
 - **Method trong Service**: dùng động từ rõ nghĩa: `get*` (lấy 1 bản ghi, ném `AppException` nếu không thấy), `list*` / `search*` (trả `PageResponse<...>`), `create*`, `update*`, `delete*` / `deactivate*`, `approve*`, `reject*`, `cancel*`.

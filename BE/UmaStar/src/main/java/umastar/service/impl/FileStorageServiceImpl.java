@@ -25,18 +25,19 @@ import java.util.Locale;
 import java.util.UUID;
 
 /**
- * Luu file len o dia theo cau truc: {UPLOAD_DIR}/{loai}/{nam}/{thang}/{uuid}.{duoi}
- * Ten file goc KHONG bao gio duoc dung de dat ten tren dia, nen khong the ghi de file khac hay thoat khoi thu muc upload.
+ * Triển khai {@link FileStorageService} lưu file lên ổ đĩa local theo cấu trúc:
+ * {@code {UPLOAD_DIR}/{loai}/{nam}/{thang}/{uuid}.{duoi}}.
+ * Tên file gốc KHÔNG bao giờ được dùng để đặt tên trên đĩa, nên không thể ghi đè file khác hay thoát khỏi thư mục upload.
  */
 @Service
-public class LocalFileStorageService implements FileStorageService {
+public class FileStorageServiceImpl implements FileStorageService {
 
-    private static final Logger log = LoggerFactory.getLogger(LocalFileStorageService.class);
+    private static final Logger log = LoggerFactory.getLogger(FileStorageServiceImpl.class);
     private static final int MAX_ORIGINAL_NAME_LENGTH = 255;
 
     private final Path baseDir;
 
-    public LocalFileStorageService(@Value("${app.upload.dir}") String uploadDir) {
+    public FileStorageServiceImpl(@Value("${app.upload.dir}") String uploadDir) {
         if (uploadDir == null || uploadDir.isBlank()) {
             throw new IllegalStateException("app.upload.dir khong duoc rong");
         }

@@ -13,14 +13,14 @@ import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class LocalFileStorageServiceTest {
+class FileStorageServiceImplTest {
 
     @TempDir
     Path tempDir;
 
     @Test
     void storeLoadAndDeleteValidPdf() {
-        LocalFileStorageService service = new LocalFileStorageService(tempDir.toString());
+        FileStorageServiceImpl service = new FileStorageServiceImpl(tempDir.toString());
         byte[] pdfBytes = "%PDF-1.4\nhello".getBytes();
         MockMultipartFile file = new MockMultipartFile("file", "passport.pdf", "application/pdf", pdfBytes);
 
@@ -38,7 +38,7 @@ class LocalFileStorageServiceTest {
 
     @Test
     void rejectSpoofedJpgWithWrongMagicBytes() {
-        LocalFileStorageService service = new LocalFileStorageService(tempDir.toString());
+        FileStorageServiceImpl service = new FileStorageServiceImpl(tempDir.toString());
         MockMultipartFile fakeJpg = new MockMultipartFile("file", "evil.jpg", "image/jpeg", "not-an-image".getBytes());
 
         AppException ex = assertThrows(AppException.class, () -> service.store(fakeJpg, FileCategory.IMAGE));
@@ -47,7 +47,7 @@ class LocalFileStorageServiceTest {
 
     @Test
     void rejectPathTraversalOnLoad() {
-        LocalFileStorageService service = new LocalFileStorageService(tempDir.toString());
+        FileStorageServiceImpl service = new FileStorageServiceImpl(tempDir.toString());
         AppException ex = assertThrows(AppException.class, () -> service.load("../secret.txt"));
         assertEquals(ErrorCode.INVALID_FILE_NAME, ex.getErrorCode());
     }

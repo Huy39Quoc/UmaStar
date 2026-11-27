@@ -1,6 +1,7 @@
 package umastar.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import umastar.entity.User;
 import umastar.enums.Role;
 import umastar.enums.UserStatus;
@@ -8,7 +9,7 @@ import umastar.enums.UserStatus;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface UserRepository extends JpaRepository<User, UUID> {
+public interface UserRepository extends JpaRepository<User, UUID>, JpaSpecificationExecutor<User> {
 
     /** Tim theo email, khong phan biet hoa thuong (dung cho dang nhap). */
     Optional<User> findByEmailIgnoreCase(String email);

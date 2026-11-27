@@ -72,8 +72,25 @@
 | `umastar.config` | `class` | [`OpenApiConfig`](src/main/java/umastar/config/OpenApiConfig.java) | `@Configuration` |
 | `umastar.config` | `class` | [`SecurityConfig`](src/main/java/umastar/config/SecurityConfig.java) | Cau hinh Spring Security (stateless JWT, mo Swagger/Auth, tra JSON cho 401/403). |
 | `umastar.config` | `class` | [`SeedProperties`](src/main/java/umastar/config/SeedProperties.java) | Cau hinh danh sach tai khoan seed theo tung Role tu application.properties / .env. |
+| `umastar.controller` | `class` | [`AuthController`](src/main/java/umastar/controller/AuthController.java) | API xác thực & tài khoản. Chỉ nhận/trả DTO, mọi nghiệp vụ nằm ở {@link AuthService}. |
+| `umastar.controller` | `class` | [`ProfileController`](src/main/java/umastar/controller/ProfileController.java) | API xem và cập nhật hồ sơ cá nhân của người dùng đang đăng nhập. |
+| `umastar.controller` | `class` | [`UserController`](src/main/java/umastar/controller/UserController.java) | API quản lý tài khoản nhân viên & người dùng (chỉ dành cho Logistics Manager). |
+| `umastar.dto.request` | `record` | [`ChangePasswordRequest`](src/main/java/umastar/dto/request/ChangePasswordRequest.java) | Yêu cầu đổi mật khẩu của người đang đăng nhập. Mật khẩu hiện tại chỉ kiểm tra "có nhập" (tài khoản cũ có thể có mật khẩu không theo chính sách mới); mật khẩu mới phải đạt chính sách chung. Cả hai giữ nguyên, không cắt khoảng trắng và không bao giờ được ghi ra log. |
+| `umastar.dto.request` | `record` | [`CreateUserRequest`](src/main/java/umastar/dto/request/CreateUserRequest.java) | Yêu cầu tạo tài khoản nhân viên do Logistics Manager thực hiện ({@code POST /api/v1/users}). |
+| `umastar.dto.request` | `record` | [`ForgotPasswordRequest`](src/main/java/umastar/dto/request/ForgotPasswordRequest.java) | Yêu cầu gửi hướng dẫn đặt lại mật khẩu qua email. Email được cắt khoảng trắng và viết thường. |
+| `umastar.dto.request` | `record` | [`LoginRequest`](src/main/java/umastar/dto/request/LoginRequest.java) | Yêu cầu đăng nhập. Chỉ kiểm tra "có nhập" và độ dài tối đa, KHÔNG kiểm tra chính sách mật khẩu hay định dạng email: tài khoản cũ có thể có mật khẩu không theo chính sách mới, và không muốn tiết lộ quy tắc cho kẻ dò mật khẩu. Email được cắt khoảng trắng và viết thường; mật khẩu giữ nguyên và không bao giờ ghi ra log. |
+| `umastar.dto.request` | `record` | [`RefreshTokenRequest`](src/main/java/umastar/dto/request/RefreshTokenRequest.java) | Yêu cầu làm mới phiên đăng nhập bằng refresh token nhận được lúc đăng nhập (hoặc lần làm mới trước). Token được cắt khoảng trắng hai đầu (do sao chép/dán) và không bao giờ được ghi ra log. |
+| `umastar.dto.request` | `record` | [`RegisterRequest`](src/main/java/umastar/dto/request/RegisterRequest.java) | Yêu cầu đăng ký tài khoản khách hàng (CLB hoặc cá nhân chủ ngựa). Dữ liệu được chuẩn hóa ngay khi tạo đối tượng: cắt khoảng trắng hai đầu, email viết thường, số điện thoại rỗng thành {@code null}. Riêng mật khẩu giữ nguyên, không bao giờ bị cắt hay ghi ra log. |
+| `umastar.dto.request` | `record` | [`ResetPasswordRequest`](src/main/java/umastar/dto/request/ResetPasswordRequest.java) | Yêu cầu đặt lại mật khẩu bằng token nhận từ email quên mật khẩu. Token được cắt khoảng trắng hai đầu; mật khẩu mới giữ nguyên và bị che khi ghi log. |
+| `umastar.dto.request` | `record` | [`UpdateProfileRequest`](src/main/java/umastar/dto/request/UpdateProfileRequest.java) | Yêu cầu cập nhật hồ sơ cá nhân ({@code PUT /api/v1/profile}). Không chứa {@code email} và {@code role} nên người dùng không thể tự thay đổi hai trường này. |
+| `umastar.dto.request` | `record` | [`UpdateUserStatusRequest`](src/main/java/umastar/dto/request/UpdateUserStatusRequest.java) | Yêu cầu cập nhật trạng thái tài khoản nhân viên ({@code PATCH /api/v1/users/{id}/status}). |
+| `umastar.dto.response` | `record` | [`AuthResponse`](src/main/java/umastar/dto/response/AuthResponse.java) | Bộ token trả về sau khi đăng nhập (và sau này khi làm mới token). {@code expiresIn} là thời gian sống của accessToken tính bằng giây. refreshToken chỉ xuất hiện ĐÚNG MỘT LẦN ở đây: DB chỉ lưu hash nên hệ thống không thể cấp lại bản gốc. |
 | `umastar.dto.response` | `record` | [`ErrorResponse`](src/main/java/umastar/dto/response/ErrorResponse.java) | - |
+| `umastar.dto.response` | `record` | [`MessageResponse`](src/main/java/umastar/dto/response/MessageResponse.java) | Phản hồi thông báo văn bản thống nhất cho các thao tác không trả dữ liệu chi tiết. |
 | `umastar.dto.response` | `record` | [`PageResponse`](src/main/java/umastar/dto/response/PageResponse.java) | - |
+| `umastar.dto.response` | `record` | [`RegisterResponse`](src/main/java/umastar/dto/response/RegisterResponse.java) | Kết quả đăng ký thành công. Không chứa mật khẩu hay hash. Người dùng đăng nhập ở bước tiếp theo. |
+| `umastar.dto.response` | `record` | [`UserResponse`](src/main/java/umastar/dto/response/UserResponse.java) | Thông tin người dùng trả ra cho API hồ sơ cá nhân và quản lý tài khoản (không chứa thông tin nhạy cảm). |
+| `umastar.dto.response` | `record` | [`UserSummaryResponse`](src/main/java/umastar/dto/response/UserSummaryResponse.java) | Thông tin tóm tắt của người dùng trả về cho FE (không có mật khẩu hay trạng thái bảo mật). |
 | `umastar.entity` | `class` | [`BaseEntity`](src/main/java/umastar/entity/BaseEntity.java) | `@MappedSuperclass`, `@Getter`, `@Setter` |
 | `umastar.entity` | `class` | [`City`](src/main/java/umastar/entity/City.java) | `@Entity`, `@Table`, `@Getter @Setter @NoArgsConstructor` |
 | `umastar.entity` | `class` | [`Country`](src/main/java/umastar/entity/Country.java) | `@Entity`, `@Table`, `@Getter @Setter @NoArgsConstructor` |
@@ -121,6 +138,8 @@
 | `umastar.exception` | `class` | [`AppException`](src/main/java/umastar/exception/AppException.java) | Loi nghiep vu co kiem soat. Dung: throw new AppException(ErrorCode.HORSE_NOT_FOUND); throw new AppException(ErrorCode.BUSINESS_RULE_VIOLATION, "Ngày khởi hành phải sau hôm nay ít nhất 14 ngày"); Ban thong bao rieng chi dung khi can chi tiet dong, con lai dung message mac dinh cua ErrorCode. |
 | `umastar.exception` | `enum` | [`ErrorCode`](src/main/java/umastar/exception/ErrorCode.java) | Ma loi thong nhat. Moi loi gom: ma so (code), thong bao hien thi cho nguoi dung, HTTP status. QUY UOC DAI MA (moi nhom 100 so, khong de trung): 100 AUTH \| 200 TOKEN \| 300 USER \| 400 PASSWORD \| 500 FILE \| 600 SYSTEM 700 MASTER DATA (Country, City) \| 800 VEHICLE \| 900 REGULATION 1000 CUSTOMER \| 1100 HORSE \| 1200 NOTIFICATION (du kien) 1300 ORDER \| 1400 LEGAL_DOCUMENT \| 1500 TRIP \| 1600 TRIP_STOP, ASSIGNMENT 1700 INCIDENT, ROUTE_CHANGE \| 1800 HANDOVER \| 1900 REPORT Them loi moi: chon so tiep theo trong dung nhom. ErrorCodeTest se bao loi neu bi trung so. |
 | `umastar.exception` | `class` | [`GlobalExceptionHandler`](src/main/java/umastar/exception/GlobalExceptionHandler.java) | Bo hung loi tap trung. Moi loi -> ErrorResponse thong nhat. Quy tac: loi cua client (4xx) khong log stack trace; loi he thong (5xx) luon log day du. |
+| `umastar.mapper` | `class` | [`AuthMapper`](src/main/java/umastar/mapper/AuthMapper.java) | Chuyển đổi DTO ↔ Entity cho module xác thực & tài khoản ({@code auth}). |
+| `umastar.mapper` | `class` | [`UserMapper`](src/main/java/umastar/mapper/UserMapper.java) | Chuyển đổi DTO ↔ Entity cho hồ sơ cá nhân ({@code /profile}) và quản lý người dùng ({@code /users}). |
 | `umastar.repository` | `interface` | [`CustomerRepository`](src/main/java/umastar/repository/CustomerRepository.java) | - |
 | `umastar.repository` | `interface` | [`RefreshTokenRepository`](src/main/java/umastar/repository/RefreshTokenRepository.java) | - |
 | `umastar.repository` | `interface` | [`UserRepository`](src/main/java/umastar/repository/UserRepository.java) | - |
@@ -130,29 +149,70 @@
 | `umastar.security` | `class` | [`JwtService`](src/main/java/umastar/security/JwtService.java) | Tao va xac thuc access token (JWT, ky HS256). Token chua: sub = id nguoi dung, role, iss, iat, exp, jti. KHONG chua email hay mat khau. Refresh token KHONG phai JWT: la chuoi ngau nhien, xem SecureTokenGenerator / TokenHasher. |
 | `umastar.security` | `class` | [`SecurityUtils`](src/main/java/umastar/security/SecurityUtils.java) | Helper lay thong tin nguoi dung dang dang nhap tu SecurityContext. |
 | `umastar.security` | `class` | [`UserPrincipal`](src/main/java/umastar/security/UserPrincipal.java) | Nguoi dung dang dang nhap, dung trong SecurityContext. Chi giu cac truong can thiet (khong giu entity User de tranh lazy loading va lo du lieu). Quyen duoc dat dang ROLE_<TEN_ROLE> nen dung duoc @PreAuthorize("hasRole('LOGISTICS_MANAGER')"). |
+| `umastar.service` | `interface` | [`AuthService`](src/main/java/umastar/service/AuthService.java) | Nghiệp vụ xác thực & tài khoản. |
 | `umastar.service` | `interface` | [`FileStorageService`](src/main/java/umastar/service/FileStorageService.java) | - |
-| `umastar.service.impl` | `class` | [`LocalFileStorageService`](src/main/java/umastar/service/impl/LocalFileStorageService.java) | Luu file len o dia theo cau truc: {UPLOAD_DIR}/{loai}/{nam}/{thang}/{uuid}.{duoi} Ten file goc KHONG bao gio duoc dung de dat ten tren dia, nen khong the ghi de file khac hay thoat khoi thu muc upload. |
+| `umastar.service` | `interface` | [`MailService`](src/main/java/umastar/service/MailService.java) | Dịch vụ gửi email thông báo/xác thực. Có thể thay thế triển khai bằng SMTP thật mà không đổi tầng nghiệp vụ. |
+| `umastar.service` | `interface` | [`UserService`](src/main/java/umastar/service/UserService.java) | Nghiệp vụ hồ sơ cá nhân (/profile) và quản lý người dùng (/users). |
+| `umastar.service.impl` | `class` | [`AuthServiceImpl`](src/main/java/umastar/service/impl/AuthServiceImpl.java) | `@Service` |
+| `umastar.service.impl` | `class` | [`FileStorageServiceImpl`](src/main/java/umastar/service/impl/FileStorageServiceImpl.java) | Triển khai {@link FileStorageService} lưu file lên ổ đĩa local theo cấu trúc: {@code {UPLOAD_DIR}/{loai}/{nam}/{thang}/{uuid}.{duoi}}. Tên file gốc KHÔNG bao giờ được dùng để đặt tên trên đĩa, nên không thể ghi đè file khác hay thoát khỏi thư mục upload. |
+| `umastar.service.impl` | `class` | [`MailServiceImpl`](src/main/java/umastar/service/impl/MailServiceImpl.java) | Triển khai {@link MailService} cho môi trường phát triển (ghi log thay vì gửi SMTP thật). |
+| `umastar.service.impl` | `class` | [`UserServiceImpl`](src/main/java/umastar/service/impl/UserServiceImpl.java) | `@Service` |
 | `umastar.storage` | `enum` | [`AllowedFileType`](src/main/java/umastar/storage/AllowedFileType.java) | Cac dinh dang file duoc phep. Kiem tra 3 lop: duoi file, MIME khai bao, va quan trong nhat la "chu ky" (magic bytes) o dau file, vi duoi va MIME do client tu khai bao nen co the gia mao. |
 | `umastar.storage` | `enum` | [`FileCategory`](src/main/java/umastar/storage/FileCategory.java) | Loai file nghiep vu: quyet dinh thu muc luu, dung luong toi da va dinh dang cho phep. Gioi han o day KHONG duoc lon hon MAX_FILE_SIZE trong .env (Spring chan truoc khi toi day). |
 | `umastar.storage` | `record` | [`StoredFile`](src/main/java/umastar/storage/StoredFile.java) | Ket qua luu file. @param path duong dan TUONG DOI so voi thu muc upload (vd documents/2026/11/<uuid>.pdf) - luu vao cot file_url @param originalName ten file goc nguoi dung tai len (chi de hien thi) @param contentType MIME da duoc xac thuc theo noi dung file @param size dung luong (byte) |
+| `umastar.util` | `class` | [`InputNormalizer`](src/main/java/umastar/util/InputNormalizer.java) | Chuẩn hóa chuỗi đầu vào dùng chung cho các DTO request. |
 | `umastar.util` | `class` | [`PageableFactory`](src/main/java/umastar/util/PageableFactory.java) | - |
 | `umastar.util` | `class` | [`PasswordPolicy`](src/main/java/umastar/util/PasswordPolicy.java) | Chinh sach mat khau dung chung (seed Manager, dang ky, doi mat khau, dat lai mat khau): 8 ky tu tro len, co chu hoa, chu thuong, chu so, va toi da 72 byte (gioi han cua BCrypt). |
 | `umastar.util` | `class` | [`SecureTokenGenerator`](src/main/java/umastar/util/SecureTokenGenerator.java) | - |
 | `umastar.util` | `class` | [`TokenHasher`](src/main/java/umastar/util/TokenHasher.java) | - |
+| `umastar.validation` | `class` | [`StrongPassword`](src/main/java/umastar/validation/StrongPassword.java) | `@Documented`, `@Constraint`, `@Target`, `@Retention` |
+| `umastar.validation` | `class` | [`StrongPasswordValidator`](src/main/java/umastar/validation/StrongPasswordValidator.java) | Bộ kiểm tra của {@link StrongPassword}: ủy quyền hoàn toàn cho {@link PasswordPolicy} để chỉ có một nguồn quy tắc. |
+| `umastar.validation` | `class` | [`ValidPhone`](src/main/java/umastar/validation/ValidPhone.java) | `@Documented`, `@Constraint`, `@Target`, `@Retention` |
+| `umastar.validation` | `class` | [`ValidPhoneValidator`](src/main/java/umastar/validation/ValidPhoneValidator.java) | Bộ kiểm tra số điện thoại Việt Nam cho {@link ValidPhone}. |
 
 ### API Endpoints (Controllers)
 
-_Chưa có Controller nào trong mã nguồn._
+| Controller | Method | Path | Handler | Mô tả |
+|---|---|---|---|---|
+| `AuthController` | `POST` | `/api/v1/auth/register` | `register()` | Đăng ký tài khoản khách hàng |
+| `AuthController` | `POST` | `/api/v1/auth/login` | `login()` | Đăng nhập |
+| `AuthController` | `POST` | `/api/v1/auth/refresh` | `refresh()` | Làm mới access token (xoay vòng refresh token) |
+| `AuthController` | `POST` | `/api/v1/auth/logout` | `logout()` | Đăng xuất khỏi thiết bị hiện tại |
+| `AuthController` | `POST` | `/api/v1/auth/logout-all` | `logoutAll()` | Đăng xuất khỏi tất cả thiết bị |
+| `AuthController` | `POST` | `/api/v1/auth/change-password` | `changePassword()` | Đổi mật khẩu |
+| `AuthController` | `POST` | `/api/v1/auth/forgot-password` | `forgotPassword()` | Quên mật khẩu |
+| `AuthController` | `POST` | `/api/v1/auth/reset-password` | `resetPassword()` | Đặt lại mật khẩu |
+| `ProfileController` | `GET` | `/api/v1/profile` | `getProfile()` | Xem hồ sơ cá nhân |
+| `ProfileController` | `PUT` | `/api/v1/profile` | `updateProfile()` | Cập nhật hồ sơ cá nhân |
+| `UserController` | `POST` | `/api/v1/users` | `createUser()` | Tạo tài khoản nhân viên |
+| `UserController` | `GET` | `/api/v1/users/{id}` | `getUser()` | Chi tiết người dùng |
 
 ### Business Services
 
 - **`CustomUserDetailsService`** (`src/main/java/umastar/security/CustomUserDetailsService.java`): Nap thong tin nguoi dung cho Spring Security va JwtAuthenticationFilter.
   - `loadUserByUsername(String email)` -> `UserDetails`
   - `findById(UUID id)` -> `Optional<UserPrincipal>`
-- **`LocalFileStorageService`** (`src/main/java/umastar/service/impl/LocalFileStorageService.java`): Luu file len o dia theo cau truc: {UPLOAD_DIR}/{loai}/{nam}/{thang}/{uuid}.{duoi} Ten file goc KHONG bao gio duoc dung de dat ten tren dia, nen khong the ghi de file khac hay thoat khoi thu muc upload.
+- **`AuthServiceImpl`** (`src/main/java/umastar/service/impl/AuthServiceImpl.java`)
+  - `register(RegisterRequest request)` -> `RegisterResponse`: Quy trình: kiểm tra email chưa dùng -> mã hóa mật khẩu (BCrypt) -> lưu User(CUSTOMER) -> lưu Customer liên kết 1-1. Hai lần đăng ký trùng email cùng lúc: bước kiểm tra không chặn được, nhưng ràng buộc {@code uk_users_email} của DB sẽ chặn và {@code GlobalExceptionHandler} đổi thành EMAIL_ALREADY_EXISTS.
+  - `login(LoginRequest request, String userAgent, String ipAddress)` -> `AuthResponse`: Quy trình đăng nhập: 1. Tìm user theo email (không tìm thấy vẫn chạy BCrypt giả rồi báo INVALID_CREDENTIALS). 2. Chặn tài khoản đang bị khóa (UserStatus.LOCKED hoặc lockedUntil còn hiệu lực). 3. Nếu đã hết thời gian khóa tạm, reset bộ đếm lỗi; kiểm tra mật khẩu. 4. Sai mật khẩu -> tăng failedLoginAttempts, đạt 5 lần thì khóa 15 phút (noRollbackFor giữ được bộ đếm). 5. Đúng mật khẩu -> chặn nếu INACTIVE, ngược lại reset bộ đếm, ghi lastLoginAt, cấp access + refresh token.
+  - `refresh(RefreshTokenRequest request, String userAgent, String ipAddress)` -> `AuthResponse`: Quy trình làm mới (rotation): 1. Băm token nhận được (SHA-256) rồi tìm và khóa dòng token; không có -> INVALID_REFRESH_TOKEN. 2. Token đã bị thu hồi mà vẫn được dùng -> nghi bị đánh cắp: thu hồi CẢ HỌ token, báo REFRESH_TOKEN_REVOKED. 3. Token hết hạn -> INVALID_REFRESH_TOKEN. 4. Tài khoản bị vô hiệu hóa/khóa -> ACCOUNT_DISABLED/ACCOUNT_LOCKED (không xoay vòng). 5. Hợp lệ -> lưu token mới (cùng familyId), thu hồi token cũ và ghi replacedByTokenId, trả cặp token mới.
+  - `logout(RefreshTokenRequest request)` -> `void`: Đăng xuất một thiết bị (idempotent): thu hồi cả họ token của refresh token gửi lên.
+  - `logoutAll(UUID userId)` -> `void`: Đăng xuất mọi thiết bị: thu hồi tất cả refresh token còn hiệu lực của người dùng.
+  - `changePassword(UUID userId, ChangePasswordRequest request)` -> `void`: Đổi mật khẩu của người đang đăng nhập.
+  - `forgotPassword(ForgotPasswordRequest request)` -> `MessageResponse`: Yêu cầu đặt lại mật khẩu: rate limit đồng nhất cho cả email có thật và không có thật để không lộ tài khoản, sinh token ngẫu nhiên lưu hash SHA-256 + hạn dùng + thời điểm yêu cầu trên {@code users}.
+  - `resetPassword(ResetPasswordRequest request)` -> `void`: Đặt lại mật khẩu bằng mã reset từ email. {@code noRollbackFor = AppException}: xóa token đã hết hạn vẫn được lưu lại để tránh kiểm tra lặp.
+- **`FileStorageServiceImpl`** (`src/main/java/umastar/service/impl/FileStorageServiceImpl.java`): Triển khai {@link FileStorageService} lưu file lên ổ đĩa local theo cấu trúc: {@code {UPLOAD_DIR}/{loai}/{nam}/{thang}/{uuid}.{duoi}}. Tên file gốc KHÔNG bao giờ được dùng để đặt tên trên đĩa, nên không thể ghi đè file khác hay thoát khỏi thư mục upload.
   - `store(MultipartFile file, FileCategory category)` -> `StoredFile`
   - `load(String path)` -> `Resource`
   - `delete(String path)` -> `void`
+- **`MailServiceImpl`** (`src/main/java/umastar/service/impl/MailServiceImpl.java`): Triển khai {@link MailService} cho môi trường phát triển (ghi log thay vì gửi SMTP thật).
+  - `sendPasswordResetEmail(String toEmail, String fullName, String rawToken, long expiresInMinutes)` -> `void`
+- **`UserServiceImpl`** (`src/main/java/umastar/service/impl/UserServiceImpl.java`)
+  - `getProfile(UUID userId)` -> `UserResponse`
+  - `updateProfile(UUID userId, UpdateProfileRequest request)` -> `UserResponse`
+  - `createUser(CreateUserRequest request)` -> `UserResponse`
+  - `getUser(UUID userId)` -> `UserResponse`
+  - `updateUserStatus(UUID currentUserId, UUID targetUserId, UpdateUserStatusRequest request)` -> `UserResponse`
 
 ### Repositories
 

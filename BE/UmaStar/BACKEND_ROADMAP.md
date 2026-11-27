@@ -22,17 +22,17 @@ Tài liệu theo dõi tiến độ triển khai Backend theo thứ tự ưu tiê
 | Done | Chức năng / Thành phần | API / Vị trí | Ai dùng | Validation & Quy tắc chính |
 |---|---|---|---|---|
 | [x] | Chuẩn hóa Response lỗi & Phân trang | `dto/response`, `GlobalExceptionHandler`, `PageableFactory` | Hệ thống | Trả `{timestamp, status, code, error, message, path, errors{field}}` cho 400, 401, 403, 404, 405, 409, 413, 415, 422, 423; phân trang `page, size (max 100), sort` |
-| [x] | Hạ tầng Upload File | `service/FileStorageService` + `service/impl/LocalFileStorageService` | Hệ thống | Lưu local theo `UPLOAD_DIR` (dễ mở rộng S3), whitelist đuôi & MIME + magic bytes, giới hạn dung lượng, đổi tên UUID |
+| [x] | Hạ tầng Upload File | `service/FileStorageService` + `service/impl/FileStorageServiceImpl` | Hệ thống | Lưu local theo `UPLOAD_DIR` (dễ mở rộng S3), whitelist đuôi & MIME + magic bytes, giới hạn dung lượng, đổi tên UUID |
 | [x] | Cấu hình Security, CORS, JWT Filter & Swagger Bearer | `SecurityConfig`, `CorsConfig`, `JwtAuthenticationFilter`, `JwtService`, `OpenApiConfig` | Hệ thống | Stateless, BCrypt, CORS theo `CORS_ALLOWED_ORIGINS`, trả JSON 401/403, `permitAll` cho `/api/v1/auth/**` (trừ `/logout-all`, `/change-password`) & Swagger UI |
 | [x] | Seed tài khoản mẫu theo từng Role | `DataSeeder`, `SeedProperties` | Hệ thống | Tạo sẵn tài khoản cho từng `Role` cấu hình trong `.env` (kèm `Customer` profile cho `CUSTOMER`) nếu DB chưa có |
-| [ ] | Đăng ký khách hàng | `POST /api/v1/auth/register` | Công khai | Email lowercase, unique, ≤ 150 ký tự; mật khẩu 8–72 ký tự (hoa, thường, số); phone `+?[0-9]{8,15}`; tạo `User(CUSTOMER)` + `Customer` |
-| [ ] | Đăng nhập | `POST /api/v1/auth/login` | Công khai | Account phải `ACTIVE`; kiểm tra `lockedUntil`; sai 5 lần khóa 15 phút; thành công reset counter + ghi `lastLoginAt`; lỗi chung chung |
-| [ ] | Làm mới token (Rotation) | `POST /api/v1/auth/refresh` | Công khai | Tìm SHA-256 hash, chưa revoke, chưa hết hạn; thu hồi token cũ, gán `replacedByTokenId`, cấp mới cùng `familyId`; dùng lại token đã revoke → revoke cả family |
-| [ ] | Đăng xuất | `POST /api/v1/auth/logout`, `/logout-all` | Đã đăng nhập | Revoke token hiện tại hoặc toàn bộ token của user (ghi `revokedReason`) |
-| [ ] | Quên / Đặt lại mật khẩu | `POST /api/v1/auth/forgot-password`, `/reset-password` | Công khai | Luôn trả 200; lưu `resetTokenHash`, `resetTokenExpiresAt`, `resetRequestedAt` trên `users` (hạn 15–30 phút, dùng xong xóa về `null`); đổi xong revoke hết refresh token; rate limit |
-| [ ] | Đổi mật khẩu | `POST /api/v1/auth/change-password` | Đã đăng nhập | Kiểm tra mật khẩu cũ, mật khẩu mới khác mật khẩu cũ và đạt chính sách; cập nhật `passwordChangedAt` |
-| [ ] | Xem / Sửa hồ sơ cá nhân | `GET/PUT /api/v1/me` | Đã đăng nhập | Không cho sửa `email` và `role`; validate `phone` |
-| [ ] | Quản lý nhân viên | `POST/GET /api/v1/users`, `PATCH /api/v1/users/{id}/status` | `LOGISTICS_MANAGER` | Role hợp lệ (`Role` enum); không tự khóa mình, không khóa Manager cuối cùng; khi `INACTIVE` revoke refresh token; lọc role/status/keyword |
+| [x] | Đăng ký khách hàng | `POST /api/v1/auth/register` | Công khai | Email lowercase, unique, ≤ 150 ký tự; mật khẩu 8–72 ký tự (hoa, thường, số); phone VN `(0\|84\|+84)[35789][0-9]{8}`; tạo `User(CUSTOMER)` + `Customer` |
+| [x] | Đăng nhập | `POST /api/v1/auth/login` | Công khai | Account phải `ACTIVE`; kiểm tra `lockedUntil`; sai 5 lần khóa 15 phút; thành công reset counter + ghi `lastLoginAt`; lỗi chung chung |
+| [x] | Làm mới token (Rotation) | `POST /api/v1/auth/refresh` | Công khai | Tìm SHA-256 hash, chưa revoke, chưa hết hạn; thu hồi token cũ, gán `replacedByTokenId`, cấp mới cùng `familyId`; dùng lại token đã revoke → revoke cả family |
+| [x] | Đăng xuất | `POST /api/v1/auth/logout`, `/logout-all` | Đã đăng nhập | Revoke token hiện tại hoặc toàn bộ token của user (ghi `revokedReason`) |
+| [x] | Quên / Đặt lại mật khẩu | `POST /api/v1/auth/forgot-password`, `/reset-password` | Công khai | Luôn trả 200; lưu `resetTokenHash`, `resetTokenExpiresAt`, `resetRequestedAt` trên `users` (hạn 15–30 phút, dùng xong xóa về `null`); đổi xong revoke hết refresh token; rate limit |
+| [x] | Đổi mật khẩu | `POST /api/v1/auth/change-password` | Đã đăng nhập | Kiểm tra mật khẩu cũ, mật khẩu mới khác mật khẩu cũ và đạt chính sách; cập nhật `passwordChangedAt` |
+| [x] | Xem / Sửa hồ sơ cá nhân | `GET/PUT /api/v1/profile` | Đã đăng nhập | Không cho sửa `email` và `role`; validate `phone` |
+| [x] | Quản lý nhân viên | `POST/GET /api/v1/users`, `PATCH /api/v1/users/{id}/status` | `LOGISTICS_MANAGER` | Role hợp lệ (`Role` enum); không tự khóa mình, không khóa Manager cuối cùng; khi `INACTIVE` revoke refresh token; lọc role/status/keyword |
 
 ---
 
@@ -50,7 +50,7 @@ Tài liệu theo dõi tiến độ triển khai Backend theo thứ tự ưu tiê
 ## P2 — Customer & Horse (Flow 1 nền)
 | Done | Chức năng | API | Ai dùng | Validation & Quy tắc chính |
 |---|---|---|---|---|
-| [ ] | Hồ sơ khách hàng | `GET/PUT /api/v1/customers/me`, `GET /api/v1/customers` | `CUSTOMER`, `LOGISTICS_MANAGER` | `organizationName` bắt buộc; kiểm `taxCode` nếu có, `countryId` tồn tại; Manager xem danh sách có lọc |
+| [ ] | Hồ sơ khách hàng | `GET/PUT /api/v1/customers/profile`, `GET /api/v1/customers` | `CUSTOMER`, `LOGISTICS_MANAGER` | `organizationName` bắt buộc; kiểm `taxCode` nếu có, `countryId` tồn tại; Manager xem danh sách có lọc |
 | [ ] | CRUD Ngựa đua | `/api/v1/horses` | `CUSTOMER` (của mình), `LOGISTICS_MANAGER` & `TRANSPORT_SPECIALIST` (xem) | `microchipNo` bắt buộc, unique, 15 chữ số; `birthDate` không ở tương lai & tuổi ≤ 40; `weightKg` 100–1000; chỉ sửa ngựa của mình; không xóa khi đang nằm trong đơn hoạt động |
 
 ---
@@ -147,6 +147,23 @@ Tài liệu theo dõi tiến độ triển khai Backend theo thứ tự ưu tiê
 <!-- AUTO-GENERATED-PROGRESS:START -->
 > Tự động cập nhật bởi `java scripts/SyncDocs.java`.
 
-- **Tiến độ checklist:** `8/62` hạng mục (13%)
-- **Thành phần đã có trong code:** `0` Controllers (`0` endpoints), `2` Services, `3` Repositories
+- **Tiến độ checklist:** `16/62` hạng mục (26%)
+- **Thành phần đã có trong code:** `3` Controllers (`12` endpoints), `5` Services, `3` Repositories
+
+### Endpoints đã triển khai
+
+| Controller | Method | Path | Handler |
+|---|---|---|---|
+| `AuthController` | `POST` | `/api/v1/auth/register` | `register()` |
+| `AuthController` | `POST` | `/api/v1/auth/login` | `login()` |
+| `AuthController` | `POST` | `/api/v1/auth/refresh` | `refresh()` |
+| `AuthController` | `POST` | `/api/v1/auth/logout` | `logout()` |
+| `AuthController` | `POST` | `/api/v1/auth/logout-all` | `logoutAll()` |
+| `AuthController` | `POST` | `/api/v1/auth/change-password` | `changePassword()` |
+| `AuthController` | `POST` | `/api/v1/auth/forgot-password` | `forgotPassword()` |
+| `AuthController` | `POST` | `/api/v1/auth/reset-password` | `resetPassword()` |
+| `ProfileController` | `GET` | `/api/v1/profile` | `getProfile()` |
+| `ProfileController` | `PUT` | `/api/v1/profile` | `updateProfile()` |
+| `UserController` | `POST` | `/api/v1/users` | `createUser()` |
+| `UserController` | `GET` | `/api/v1/users/{id}` | `getUser()` |
 <!-- AUTO-GENERATED-PROGRESS:END -->
