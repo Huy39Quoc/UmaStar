@@ -73,10 +73,13 @@
 | `umastar.config` | `class` | [`SecurityConfig`](src/main/java/umastar/config/SecurityConfig.java) | Cau hinh Spring Security (stateless JWT, mo Swagger/Auth, tra JSON cho 401/403). |
 | `umastar.config` | `class` | [`SeedProperties`](src/main/java/umastar/config/SeedProperties.java) | Cau hinh danh sach tai khoan seed theo tung Role tu application.properties / .env. |
 | `umastar.controller` | `class` | [`AuthController`](src/main/java/umastar/controller/AuthController.java) | API xác thực & tài khoản. Chỉ nhận/trả DTO, mọi nghiệp vụ nằm ở {@link AuthService}. |
+| `umastar.dto.request` | `record` | [`LoginRequest`](src/main/java/umastar/dto/request/LoginRequest.java) | Yêu cầu đăng nhập. Chỉ kiểm tra "có nhập" và độ dài tối đa, KHÔNG kiểm tra chính sách mật khẩu hay định dạng email: tài khoản cũ có thể có mật khẩu không theo chính sách mới, và không muốn tiết lộ quy tắc cho kẻ dò mật khẩu. Email được cắt khoảng trắng và viết thường; mật khẩu giữ nguyên và không bao giờ ghi ra log. |
 | `umastar.dto.request` | `record` | [`RegisterRequest`](src/main/java/umastar/dto/request/RegisterRequest.java) | Yêu cầu đăng ký tài khoản khách hàng (CLB hoặc cá nhân chủ ngựa). Dữ liệu được chuẩn hóa ngay khi tạo đối tượng: cắt khoảng trắng hai đầu, email viết thường, số điện thoại rỗng thành {@code null}. Riêng mật khẩu giữ nguyên, không bao giờ bị cắt hay ghi ra log. |
+| `umastar.dto.response` | `record` | [`AuthResponse`](src/main/java/umastar/dto/response/AuthResponse.java) | Bộ token trả về sau khi đăng nhập (và sau này khi làm mới token). {@code expiresIn} là thời gian sống của accessToken tính bằng giây. refreshToken chỉ xuất hiện ĐÚNG MỘT LẦN ở đây: DB chỉ lưu hash nên hệ thống không thể cấp lại bản gốc. |
 | `umastar.dto.response` | `record` | [`ErrorResponse`](src/main/java/umastar/dto/response/ErrorResponse.java) | - |
 | `umastar.dto.response` | `record` | [`PageResponse`](src/main/java/umastar/dto/response/PageResponse.java) | - |
 | `umastar.dto.response` | `record` | [`RegisterResponse`](src/main/java/umastar/dto/response/RegisterResponse.java) | Kết quả đăng ký thành công. Không chứa mật khẩu hay hash. Người dùng đăng nhập ở bước tiếp theo. |
+| `umastar.dto.response` | `record` | [`UserSummaryResponse`](src/main/java/umastar/dto/response/UserSummaryResponse.java) | Thông tin tóm tắt của người dùng trả về cho FE (không có mật khẩu hay trạng thái bảo mật). |
 | `umastar.entity` | `class` | [`BaseEntity`](src/main/java/umastar/entity/BaseEntity.java) | `@MappedSuperclass`, `@Getter`, `@Setter` |
 | `umastar.entity` | `class` | [`City`](src/main/java/umastar/entity/City.java) | `@Entity`, `@Table`, `@Getter @Setter @NoArgsConstructor` |
 | `umastar.entity` | `class` | [`Country`](src/main/java/umastar/entity/Country.java) | `@Entity`, `@Table`, `@Getter @Setter @NoArgsConstructor` |
@@ -153,6 +156,7 @@
 | Controller | Method | Path | Handler | Mô tả |
 |---|---|---|---|---|
 | `AuthController` | `POST` | `/api/v1/auth/register` | `register()` | Đăng ký tài khoản khách hàng |
+| `AuthController` | `POST` | `/api/v1/auth/login` | `login()` | Đăng nhập |
 
 ### Business Services
 
@@ -161,6 +165,7 @@
   - `findById(UUID id)` -> `Optional<UserPrincipal>`
 - **`AuthServiceImpl`** (`src/main/java/umastar/service/impl/AuthServiceImpl.java`)
   - `register(RegisterRequest request)` -> `RegisterResponse`: Quy trình: kiểm tra email chưa dùng -> mã hóa mật khẩu (BCrypt) -> lưu User(CUSTOMER) -> lưu Customer liên kết 1-1. Hai lần đăng ký trùng email cùng lúc: bước kiểm tra không chặn được, nhưng ràng buộc {@code uk_users_email} của DB sẽ chặn và {@code GlobalExceptionHandler} đổi thành EMAIL_ALREADY_EXISTS.
+  - `login(LoginRequest request, String userAgent, String ipAddress)` -> `AuthResponse`: Quy trình đăng nhập: 1. Tìm user theo email (không tìm thấy vẫn chạy BCrypt giả rồi báo INVALID_CREDENTIALS). 2. Chặn tài khoản đang bị khóa (UserStatus.LOCKED hoặc lockedUntil còn hiệu lực). 3. Nếu đã hết thời gian khóa tạm, reset bộ đếm lỗi; kiểm tra mật khẩu. 4. Sai mật khẩu -> tăng failedLoginAttempts, đạt 5 lần thì khóa 15 phút (noRollbackFor giữ được bộ đếm). 5. Đúng mật khẩu -> chặn nếu INACTIVE, ngược lại reset bộ đếm, ghi lastLoginAt, cấp access + refresh token.
 - **`LocalFileStorageService`** (`src/main/java/umastar/service/impl/LocalFileStorageService.java`): Luu file len o dia theo cau truc: {UPLOAD_DIR}/{loai}/{nam}/{thang}/{uuid}.{duoi} Ten file goc KHONG bao gio duoc dung de dat ten tren dia, nen khong the ghi de file khac hay thoat khoi thu muc upload.
   - `store(MultipartFile file, FileCategory category)` -> `StoredFile`
   - `load(String path)` -> `Resource`
