@@ -15,23 +15,23 @@
 ## Main Features
 
 ### 1. Logistics Manager (Quản lý Điều hành Logistics)
-- Tiếp nhận và phê duyệt các đơn hàng vận chuyển ngựa đua trong nước và quốc tế.
-- Lập kế hoạch tổng thể cho chuyến vận chuyển (chọn phương tiện, hãng hàng không, tuyến đường, điểm trung chuyển).
-- Phân công nhiệm vụ cho Chuyên viên thủ tục, Điều phối viên và Tài xế/Nhân viên đi kèm.
-- Xử lý và phê duyệt các phương án thay đổi lộ trình hoặc chi phí phát sinh trong trường hợp khẩn cấp.
+- Tiếp nhận, báo giá và phê duyệt các đơn hàng vận chuyển ngựa đua trong nước và quốc tế.
+- Phân công Chuyên viên thủ tục (`Transport Specialist`) và Điều phối viên (`Fleet Coordinator`) phụ trách từng đơn hàng.
+- Xử lý và phê duyệt các phương án thay đổi lộ trình hoặc chi phí phát sinh trong trường hợp khẩn cấp; chốt chi phí thực tế sau khi giao hàng.
 - Xem báo cáo doanh thu, chi phí vận hành và chỉ số hiệu suất hoàn thành chuyến đi (On-time delivery).
 
 ### 2. Transport Specialist (Chuyên viên Thủ tục & Kiểm dịch)
 - Quản lý danh mục quy định y tế, kiểm dịch và hải quan của từng quốc gia/cửa khẩu.
-- Khởi tạo và lưu trữ bộ hồ sơ vận chuyển số hóa cho từng con ngựa (Giấy chứng nhận tiêm phòng, Hộ chiếu ngựa, Giấy phép xuất nhập cảnh).
+- Tiếp nhận đơn được Manager giao, theo dõi và thẩm định bộ hồ sơ vận chuyển số hóa cho từng con ngựa (Giấy chứng nhận tiêm phòng, Hộ chiếu ngựa, Giấy phép xuất nhập cảnh).
 - Theo dõi tiến độ phê duyệt hồ sơ từ các cơ quan chức năng (Bộ Nông nghiệp, Hải quan, Đơn vị kiểm dịch).
 - Gửi thông báo và hướng dẫn khách hàng bổ sung các giấy tờ pháp lý còn thiếu trước ngày khởi hành.
 
 ### 3. Fleet & Route Coordinator (Điều phối viên Đội xe & Lộ trình)
 - Quản lý danh sách phương tiện chuyên dụng (xe tải chở ngựa, khoang máy bay, thùng vận chuyển - Stalls).
-- Xây dựng lộ trình di chuyển tối ưu, xác định các điểm dừng nghỉ, trạm kiểm dịch và trạm tiếp nhiên liệu.
+- Tiếp nhận đơn được Manager giao, tạo chuyến vận chuyển (`Trip`), chọn phương tiện và xây dựng lộ trình gồm các điểm dừng nghỉ, trạm kiểm dịch và trạm tiếp nhiên liệu (`TripStop`).
+- Phân công Tài xế (`DRIVER`) và Nhân viên đi kèm (`ESCORT`) thực hiện từng chuyến đi (`TripAssignment`) và xác nhận kế hoạch chuyến.
 - Cập nhật thủ công hoặc theo dõi trạng thái tiến độ chuyến đi theo từng chặng (Khởi hành, Đến điểm dừng, Đã thông quan, Đã giao).
-- Điều chỉnh lịch trình và gửi cảnh báo khi phát sinh sự cố giao thông, thời tiết xấu hoặc tắc nghẽn cửa khẩu.
+- Điều chỉnh lịch trình, xử lý sự cố và gửi đề xuất đổi lộ trình/chi phí phát sinh lên Manager duyệt khi có tình huống khẩn cấp.
 
 ### 4. Vehicle Driver / Escort (Tài xế / Nhân viên đi kèm)
 - Xem lịch trình chuyến đi, danh sách ngựa phụ trách và danh sách điểm dừng nghỉ được phân công.
@@ -120,7 +120,7 @@
 | `umastar.entity` | `class` | [`RefreshToken`](src/main/java/umastar/entity/RefreshToken.java) | `@Entity`, `@Table`, `@Index`, `@Index`, `@Index`, `@Getter @Setter @NoArgsConstructor` |
 | `umastar.entity` | `class` | [`Regulation`](src/main/java/umastar/entity/Regulation.java) | `@Entity`, `@Table`, `@Index`, `@Getter @Setter @NoArgsConstructor` |
 | `umastar.entity` | `class` | [`RouteChangeRequest`](src/main/java/umastar/entity/RouteChangeRequest.java) | `@Entity`, `@Table`, `@Index`, `@Index`, `@Getter @Setter @NoArgsConstructor` |
-| `umastar.entity` | `class` | [`TransportOrder`](src/main/java/umastar/entity/TransportOrder.java) | `@Entity`, `@Table`, `@Index`, `@Index`, `@Getter @Setter @NoArgsConstructor` |
+| `umastar.entity` | `class` | [`TransportOrder`](src/main/java/umastar/entity/TransportOrder.java) | `@Entity`, `@Table`, `@Index`, `@Index`, `@Index`, `@Index`, `@Getter @Setter @NoArgsConstructor` |
 | `umastar.entity` | `class` | [`Trip`](src/main/java/umastar/entity/Trip.java) | `@Entity`, `@Table`, `@Index`, `@Index`, `@Index`, `@Getter @Setter @NoArgsConstructor` |
 | `umastar.entity` | `class` | [`TripAssignment`](src/main/java/umastar/entity/TripAssignment.java) | `@Entity`, `@Table`, `@Getter @Setter @NoArgsConstructor` |
 | `umastar.entity` | `class` | [`TripStatusLog`](src/main/java/umastar/entity/TripStatusLog.java) | `@Entity`, `@Table`, `@Index`, `@Getter @Setter @NoArgsConstructor` |
@@ -128,7 +128,7 @@
 | `umastar.entity` | `class` | [`User`](src/main/java/umastar/entity/User.java) | `@Entity`, `@Table`, `@UniqueConstraint`, `@UniqueConstraint`, `@Getter @Setter @NoArgsConstructor` |
 | `umastar.entity` | `class` | [`Vehicle`](src/main/java/umastar/entity/Vehicle.java) | `@Entity`, `@Table`, `@Getter @Setter @NoArgsConstructor` |
 | `umastar.enums` | `enum` | [`ApprovalStatus`](src/main/java/umastar/enums/ApprovalStatus.java) | - |
-| `umastar.enums` | `enum` | [`AssignmentRole`](src/main/java/umastar/enums/AssignmentRole.java) | - |
+| `umastar.enums` | `enum` | [`AssignmentRole`](src/main/java/umastar/enums/AssignmentRole.java) | Vai trò nhân sự trực tiếp tham gia vận hành trên từng chuyến đi ({@link umastar.entity.Trip}). |
 | `umastar.enums` | `enum` | [`ChangeRequestStatus`](src/main/java/umastar/enums/ChangeRequestStatus.java) | - |
 | `umastar.enums` | `enum` | [`CustomerType`](src/main/java/umastar/enums/CustomerType.java) | - |
 | `umastar.enums` | `enum` | [`DocType`](src/main/java/umastar/enums/DocType.java) | - |

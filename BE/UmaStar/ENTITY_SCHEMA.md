@@ -25,6 +25,7 @@ erDiagram
 
     Customer ||--o{ Horse : "sở hữu ngựa"
     Customer ||--o{ TransportOrder : "tạo đơn vận chuyển"
+    User ||--o{ TransportOrder : "duyệt & phân công (approvedBy, specialist, coordinator)"
 
     TransportOrder ||--o{ OrderHorse : "danh sách ngựa trong đơn"
     Horse ||--o{ OrderHorse : "thuộc đơn"
@@ -34,8 +35,8 @@ erDiagram
     TransportOrder ||--o{ Trip : "chia thành 1 hoặc nhiều chặng"
     Vehicle ||--o{ Trip : "phương tiện thực hiện"
     Trip ||--o{ TripStop : "các điểm dừng/trạm"
-    Trip ||--o{ TripAssignment : "phân công nhân sự"
-    User ||--o{ TripAssignment : "nhân sự được giao"
+    Trip ||--o{ TripAssignment : "phân công Driver / Escort"
+    User ||--o{ TripAssignment : "tài xế / escort được giao"
 
     Trip ||--o{ TripStatusLog : "nhật ký mốc lộ trình"
     TripStop ||--o{ TripStatusLog : "check-in tại điểm dừng"
@@ -149,7 +150,7 @@ Hồ sơ ngựa đua thuộc sở hữu của khách hàng. Quan hệ **N-1** v�
 - `healthNotes` (`health_notes`): Ghi chú tiền sử bệnh lý, dị ứng, chế độ chăm sóc.
 
 ### `TransportOrder` (Bảng `transport_orders`)
-Đơn yêu cầu vận chuyển do Customer tạo và Logistics Manager phê duyệt. Quan hệ **N-1** với `Customer`, `Country`/`City` (điểm đi và điểm đến), `User` (`approvedBy`); **1-N** với `OrderHorse`.
+Đơn yêu cầu vận chuyển do Customer tạo và Logistics Manager phê duyệt, đồng thời phân công `Transport Specialist` (làm giấy tờ) và `Fleet Coordinator` (lập `Trip` & điều phối). Quan hệ **N-1** với `Customer`, `Country`/`City` (điểm đi và điểm đến), `User` (`approvedBy`, `specialist`, `coordinator`); **1-N** với `OrderHorse`.
 - `orderCode` (`order_code`): Mã đơn hiển thị cho người dùng (duy nhất).
 - `customer`: Khách hàng đặt đơn.
 - `originCountry`, `originCity`, `originAddress`: Quốc gia, thành phố và địa chỉ cụ thể nơi đón ngựa.
@@ -163,6 +164,9 @@ Hồ sơ ngựa đua thuộc sở hữu của khách hàng. Quan hệ **N-1** v�
 - `currency`: Đơn vị tiền tệ 3 ký tự (mặc định `USD`).
 - `status` (`OrderStatus`): Vòng đời đơn (`PENDING` -> `APPROVED`/`REJECTED` -> `DOC_PROCESSING` -> `READY` -> `IN_TRANSIT` -> `DELIVERED` -> `COMPLETED` / `CANCELLED`).
 - `rejectReason`, `approvedBy`, `approvedAt`: Lý do từ chối hoặc thông tin người/thời điểm duyệt đơn.
+- `specialist`: Chuyên viên thủ tục (`TRANSPORT_SPECIALIST`) được Manager phân công xử lý hồ sơ pháp lý của đơn.
+- `coordinator`: Điều phối viên (`FLEET_COORDINATOR`) được Manager phân công tạo `Trip`, lộ trình và gán tài xế/escort cho đơn.
+- `assignedAt` (`assigned_at`): Thời điểm Manager phân công nhân sự phụ trách đơn.
 - `orderHorses`: Danh sách ngựa tham gia đơn hàng.
 - `version`: Số phiên bản Optimistic Locking (`@Version`) chống ghi đè đồng thời.
 
@@ -205,7 +209,7 @@ Danh mục phương tiện / thiết bị chuyên dụng chở ngựa.
 - `version`: Số phiên bản Optimistic Locking (`@Version`) chống ghi đè đồng thời.
 
 ### `Trip` (Bảng `trips`)
-Một chặng vận chuyển thực tế thuộc `TransportOrder` (một đơn quốc tế có thể gồm nhiều `Trip` theo thứ tự `sequenceNo`). Quan hệ **N-1** với `TransportOrder`, `Vehicle`, `User` (`plannedBy`, `coordinator`); **1-N** với `TripStop`, `TripAssignment`.
+Một chặng vận chuyển thực tế thuộc `TransportOrder` (một đơn quốc tế có thể gồm nhiều `Trip` theo thứ tự `sequenceNo`), do `FLEET_COORDINATOR` được giao đơn tạo và lập lộ trình. Quan hệ **N-1** với `TransportOrder`, `Vehicle`, `User` (`plannedBy`); **1-N** với `TripStop`, `TripAssignment`.
 - `order`: Đơn vận chuyển gốc.
 - `vehicle`: Phương tiện sử dụng cho chặng này.
 - `sequenceNo` (`sequence_no`): Thứ tự chặng (mặc định `1`).
@@ -214,11 +218,10 @@ Một chặng vận chuyển thực tế thuộc `TransportOrder` (một đơn q
 - `actualStart`, `actualEnd`: Thời gian bắt đầu và kết thúc thực tế.
 - `status` (`TripStatus`): `PLANNED`, `DEPARTED`, `IN_TRANSIT`, `DELIVERED`, `CANCELLED`.
 - `confirmed`, `confirmedAt`: Cờ xác nhận kế hoạch chuyến đi đã sẵn sàng xuất phát (`POST /trips/{id}/confirm`) và thời điểm xác nhận.
-- `plannedBy` (`planned_by`): Người lập kế hoạch (Logistics Manager).
-- `coordinator`: Điều phối viên phụ trách chính.
+- `plannedBy` (`planned_by`): Điều phối viên (`FLEET_COORDINATOR`) lập kế hoạch và tạo chuyến.
 - `currentLat`, `currentLng`, `lastLocationAt`: Tọa độ GPS mới nhất và thời điểm cập nhật vị trí.
 - `stops`: Danh sách điểm dừng sắp theo `sequenceNo ASC`.
-- `assignments`: Danh sách nhân sự được phân công.
+- `assignments`: Danh sách tài xế & nhân viên đi kèm (`DRIVER`, `ESCORT`) được phân công.
 - `version`: Số phiên bản Optimistic Locking (`@Version`) chống ghi đè đồng thời.
 
 ### `TripStop` (Bảng `trip_stops`)
@@ -235,11 +238,11 @@ Các điểm mốc trên lộ trình của một `Trip` (unique theo `trip_id + 
 - `status` (`StopStatus`): `PENDING`, `ARRIVED`, `CLEARED`, `SKIPPED`.
 
 ### `TripAssignment` (Bảng `trip_assignments`)
-Phân công nhân sự thực hiện chuyến đi (unique theo `trip_id + user_id + assignment_role`). Quan hệ **N-1** với `Trip`, `User` (`user`, `assignedBy`).
+Phân công nhân sự trực tiếp vận hành chuyến đi (unique theo `trip_id + user_id + assignment_role`), do `FLEET_COORDINATOR` thực hiện sau khi tạo `Trip`. Quan hệ **N-1** với `Trip`, `User` (`user`, `assignedBy`).
 - `trip`: Chuyến đi được phân công.
-- `user`: Nhân sự được giao việc.
-- `assignmentRole` (`assignment_role`, `AssignmentRole`): Vai trò trong chuyến (`DRIVER`, `ESCORT`, `SPECIALIST`, `COORDINATOR`).
-- `assignedBy` (`assigned_by`): Người phân công.
+- `user`: Tài xế hoặc nhân viên đi kèm được giao việc.
+- `assignmentRole` (`assignment_role`, `AssignmentRole`): Vai trò trong chuyến (`DRIVER`, `ESCORT`).
+- `assignedBy` (`assigned_by`): Điều phối viên thực hiện phân công.
 - `assignedAt` (`assigned_at`): Thời điểm phân công.
 
 ---
@@ -535,6 +538,9 @@ Cập nhật từ toàn bộ mã nguồn: `src/main/java/umastar/**` (`21` entit
 | `rejectReason` | `String` | @Column(name = "reject_reason", columnDefinition = "text") |
 | `approvedBy` | `User` | @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "approved_by") |
 | `approvedAt` | `Instant` | @Column(name = "approved_at") |
+| `specialist` | `User` | Chuyên viên thủ tục & kiểm dịch được Manager phân công phụ trách hồ sơ pháp lý của đơn này. — @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "specialist_id") |
+| `coordinator` | `User` | Điều phối viên đội xe được Manager phân công lập Trip, lộ trình và gán Driver/Escort cho đơn này. — @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "coordinator_id") |
+| `assignedAt` | `Instant` | Thời điểm Manager phân công nhân sự phụ trách đơn. — @Column(name = "assigned_at") |
 | `orderHorses` | `List<OrderHorse>` | @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true) |
 | `version` | `Long` | @Version |
 
@@ -552,8 +558,7 @@ Cập nhật từ toàn bộ mã nguồn: `src/main/java/umastar/**` (`21` entit
 | `status` | `TripStatus` | @Enumerated(EnumType.STRING) @Column(nullable = false, length = 20) |
 | `confirmed` | `boolean` | @Column(nullable = false) |
 | `confirmedAt` | `Instant` | @Column(name = "confirmed_at") |
-| `plannedBy` | `User` | @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "planned_by") |
-| `coordinator` | `User` | @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "coordinator_id") |
+| `plannedBy` | `User` | Điều phối viên (FLEET_COORDINATOR) lập kế hoạch và tạo chuyến đi này. — @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "planned_by") |
 | `currentLat` | `Double` | @Column(name = "current_lat") |
 | `currentLng` | `Double` | @Column(name = "current_lng") |
 | `lastLocationAt` | `Instant` | @Column(name = "last_location_at") |
@@ -635,7 +640,7 @@ Cập nhật từ toàn bộ mã nguồn: `src/main/java/umastar/**` (`21` entit
 |---|---|
 | `AllowedFileType` | `PDF`, `Set.of`, `"pdf")`, `JPEG`, `Set.of`, `"image/pjpeg")`, `"jpg"`, `"jpeg")`, `PNG`, `Set.of`, `"png")` |
 | `ApprovalStatus` | `MISSING`, `SUBMITTED`, `UNDER_REVIEW`, `APPROVED`, `REJECTED` |
-| `AssignmentRole` | `DRIVER`, `ESCORT`, `SPECIALIST`, `COORDINATOR` |
+| `AssignmentRole` | `/**`, `/**`, `chăm` |
 | `ChangeRequestStatus` | `PENDING`, `APPROVED`, `REJECTED` |
 | `CustomerType` | `CLUB`, `INDIVIDUAL` |
 | `DocType` | `VACCINATION_CERT`, `HORSE_PASSPORT`, `EXPORT_PERMIT`, `IMPORT_PERMIT`, `HEALTH_CERT`, `OTHER` |

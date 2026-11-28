@@ -10,7 +10,9 @@ import umastar.enums.*;
 @Entity
 @Table(name = "transport_orders", indexes = {
         @Index(name = "idx_order_customer", columnList = "customer_id"),
-        @Index(name = "idx_order_status", columnList = "status")
+        @Index(name = "idx_order_status", columnList = "status"),
+        @Index(name = "idx_order_specialist", columnList = "specialist_id"),
+        @Index(name = "idx_order_coordinator", columnList = "coordinator_id")
 })
 @Getter @Setter @NoArgsConstructor
 public class TransportOrder extends BaseEntity {
@@ -91,6 +93,20 @@ public class TransportOrder extends BaseEntity {
 
     @Column(name = "approved_at")
     private Instant approvedAt;
+
+    /** Chuyên viên thủ tục & kiểm dịch được Manager phân công phụ trách hồ sơ pháp lý của đơn này. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "specialist_id")
+    private User specialist;
+
+    /** Điều phối viên đội xe được Manager phân công lập Trip, lộ trình và gán Driver/Escort cho đơn này. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "coordinator_id")
+    private User coordinator;
+
+    /** Thời điểm Manager phân công nhân sự phụ trách đơn. */
+    @Column(name = "assigned_at")
+    private Instant assignedAt;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderHorse> orderHorses = new ArrayList<>();

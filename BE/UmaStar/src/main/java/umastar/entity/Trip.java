@@ -53,13 +53,10 @@ public class Trip extends BaseEntity {
     @Column(name = "confirmed_at")
     private Instant confirmedAt;
 
+    /** Điều phối viên (FLEET_COORDINATOR) lập kế hoạch và tạo chuyến đi này. */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "planned_by")
     private User plannedBy;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "coordinator_id")
-    private User coordinator;
 
     @Column(name = "current_lat")
     private Double currentLat;

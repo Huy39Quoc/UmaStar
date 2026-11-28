@@ -5,6 +5,7 @@ import lombok.*;
 import java.time.*;
 import umastar.enums.*;
 
+/** Phân công tài xế ({@code DRIVER}) và nhân viên đi kèm ({@code ESCORT}) thực hiện một chuyến đi ({@link Trip}). */
 @Entity
 @Table(name = "trip_assignments",
         uniqueConstraints = @UniqueConstraint(name = "uk_trip_user_role", columnNames = {"trip_id", "user_id", "assignment_role"}))

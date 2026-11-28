@@ -11,7 +11,7 @@ Tài liệu theo dõi tiến độ triển khai Backend theo thứ tự ưu tiê
 |---|---|---|
 | [x] | Đồng bộ package & cấu hình Postgres + Swagger | `umastar.*`, PostgreSQL (`umastar_db`), SpringDoc `3.2.1` |
 | [x] | Cấu hình `.env` & `.env.example` không hardcode | `spring.config.import=optional:file:.env[.properties]` |
-| [x] | Bổ sung Optimistic Locking & field còn thiếu trên Entity | `@Version` (`TransportOrder`, `Trip`, `Vehicle`, `LegalDocument`), `Trip.confirmed`/`confirmedAt`, `HorseConditionLog.photoUrls` & `stage` (`HorseConditionStage`), `OrderHorse.preTransportPhotoUrls`/`preTransportNote` |
+| [x] | Bổ sung Optimistic Locking & field còn thiếu trên Entity | `@Version` (`TransportOrder`, `Trip`, `Vehicle`, `LegalDocument`), `Trip.confirmed`/`confirmedAt`, `HorseConditionLog.photoUrls` & `stage` (`HorseConditionStage`), `OrderHorse.preTransportPhotoUrls`/`preTransportNote`, `TransportOrder.specialist`/`coordinator`/`assignedAt`, `AssignmentRole` (`DRIVER`, `ESCORT`) |
 | [x] | Thêm `spring-boot-starter-security` + thư viện JWT vào `pom.xml` | Khai báo thêm `JWT_SECRET`, `JWT_ACCESS_EXP_MS`, `JWT_REFRESH_EXP_MS`, `UPLOAD_DIR`, `MAX_FILE_SIZE`, `MAX_REQUEST_SIZE`, `STORAGE_PROVIDER`, `CLOUDINARY_*` trong `.env` & `.env.example` |
 
 ---
@@ -73,7 +73,7 @@ Tài liệu theo dõi tiến độ triển khai Backend theo thứ tự ưu tiê
 | [ ] | Xem danh sách & chi tiết đơn | `GET /api/v1/orders`, `GET /api/v1/orders/{id}` | `CUSTOMER` (của mình), Nhân viên | Dùng `@EntityGraph`/`JOIN FETCH`; lọc `status`, `transportType`, khoảng ngày, từ khóa |
 | [ ] | Sửa đơn | `PUT /api/v1/orders/{id}` | `CUSTOMER` | Chỉ sửa khi `PENDING`; áp lại toàn bộ validation lúc tạo |
 | [ ] | Hủy đơn | `POST /api/v1/orders/{id}/cancel` | `CUSTOMER`, `LOGISTICS_MANAGER` | Customer hủy khi `PENDING`/`APPROVED`/`DOC_PROCESSING`; từ `READY` chỉ Manager hủy; không hủy từ `IN_TRANSIT`; bắt buộc lý do |
-| [ ] | Duyệt đơn | `POST /api/v1/orders/{id}/approve` | `LOGISTICS_MANAGER` | Chỉ khi `PENDING`; `quotedPrice > 0` & có `currency`; ghi `approvedBy`, `approvedAt`; tự sinh `LegalDocument` (`MISSING`) theo `Regulation` nước đến; chuyển `DOC_PROCESSING` (hoặc `READY` nếu không yêu cầu giấy tờ); notify Customer & Specialist |
+| [ ] | Duyệt đơn & Phân công phụ trách | `POST /api/v1/orders/{id}/approve`, `PATCH /api/v1/orders/{id}/assign` | `LOGISTICS_MANAGER` | Chỉ khi `PENDING` (duyệt); `quotedPrice > 0` & có `currency`; ghi `approvedBy`, `approvedAt`; tự sinh `LegalDocument` (`MISSING`) theo `Regulation` nước đến; gán/cập nhật `specialistId` (`TRANSPORT_SPECIALIST` `ACTIVE`) và `coordinatorId` (`FLEET_COORDINATOR` `ACTIVE`) + `assignedAt`; chuyển `DOC_PROCESSING` (hoặc `READY` nếu không yêu cầu giấy tờ); notify Customer, Specialist & Coordinator |
 | [ ] | Từ chối đơn | `POST /api/v1/orders/{id}/reject` | `LOGISTICS_MANAGER` | Chỉ khi `PENDING`; bắt buộc `rejectReason`; notify Customer |
 
 ---
@@ -93,10 +93,10 @@ Tài liệu theo dõi tiến độ triển khai Backend theo thứ tự ưu tiê
 ## P6 — Lập kế hoạch chuyến, Điểm dừng & Phân công (Flow 3)
 | Done | Chức năng | API | Ai dùng | Validation & Quy tắc chính |
 |---|---|---|---|---|
-| [ ] | Tạo / Sửa / Hủy chuyến | `POST /api/v1/orders/{orderId}/trips`, `PUT /api/v1/trips/{id}`, `POST /api/v1/trips/{id}/cancel` | `LOGISTICS_MANAGER` | Đơn ở `APPROVED`/`DOC_PROCESSING`/`READY`; xe `AVAILABLE`, đủ `capacityHorses`, không trùng lịch; `plannedEnd > plannedStart`, `plannedStart` không ở quá khứ; `coordinator` có role `FLEET_COORDINATOR`; sửa/hủy chỉ khi `PLANNED` |
-| [ ] | Quản lý điểm dừng | `POST/PUT/DELETE /api/v1/trips/{id}/stops`, `PATCH /api/v1/trips/{id}/stops/reorder` | `FLEET_COORDINATOR`, `LOGISTICS_MANAGER` | `sequenceNo` liên tục từ 1; đầu `ORIGIN`, cuối `DESTINATION`; `plannedArrival` tăng dần trong khoảng chuyến; `OTHER` bắt buộc `customTypeName`; tọa độ hợp lệ; quốc tế có ≥ 1 `CUSTOMS`; chỉ sửa khi `PLANNED` |
-| [ ] | Phân công nhân sự | `POST /api/v1/trips/{id}/assignments`, `DELETE /api/v1/trips/{id}/assignments/{id}` | `LOGISTICS_MANAGER` | User `ACTIVE`, role khớp `assignmentRole`; không trùng người/vai trên 1 chuyến; không trùng lịch chuyến khác; đường bộ ≥ 1 `DRIVER`, mọi chuyến ≥ 1 `ESCORT` |
-| [ ] | Xác nhận kế hoạch chuyến | `POST /api/v1/trips/{id}/confirm` | `LOGISTICS_MANAGER` | Đủ điểm dừng + nhân sự tối thiểu; set `confirmed=true`, `confirmedAt`; notify người được phân công |
+| [ ] | Tạo / Sửa / Hủy chuyến | `POST /api/v1/orders/{orderId}/trips`, `PUT /api/v1/trips/{id}`, `POST /api/v1/trips/{id}/cancel` | `FLEET_COORDINATOR` | Đơn ở `APPROVED`/`DOC_PROCESSING`/`READY` và phải được gán cho chính Coordinator đó; xe `AVAILABLE`, đủ `capacityHorses`, không trùng lịch; `plannedEnd > plannedStart`, `plannedStart` không ở quá khứ; ghi `plannedBy = currentCoordinator`; sửa/hủy chỉ khi `PLANNED` |
+| [ ] | Quản lý điểm dừng | `POST/PUT/DELETE /api/v1/trips/{id}/stops`, `PATCH /api/v1/trips/{id}/stops/reorder` | `FLEET_COORDINATOR` | `sequenceNo` liên tục từ 1; đầu `ORIGIN`, cuối `DESTINATION`; `plannedArrival` tăng dần trong khoảng chuyến; `OTHER` bắt buộc `customTypeName`; tọa độ hợp lệ; quốc tế có ≥ 1 `CUSTOMS`; chỉ sửa khi `PLANNED` |
+| [ ] | Phân công Tài xế / Escort | `POST /api/v1/trips/{id}/assignments`, `DELETE /api/v1/trips/{id}/assignments/{id}` | `FLEET_COORDINATOR` | User `ACTIVE`, role khớp `AssignmentRole` (`DRIVER` hoặc `ESCORT`); không trùng người/vai trên 1 chuyến; không trùng lịch chuyến khác; đường bộ ≥ 1 `DRIVER`, mọi chuyến ≥ 1 `ESCORT` |
+| [ ] | Xác nhận kế hoạch chuyến | `POST /api/v1/trips/{id}/confirm` | `FLEET_COORDINATOR` | Đủ điểm dừng + nhân sự tối thiểu (`DRIVER`/`ESCORT`); set `confirmed=true`, `confirmedAt`; notify người được phân công |
 | [ ] | Xem chuyến được phân công | `GET /api/v1/my/trips`, `GET /api/v1/my/trips/{id}` | `DRIVER`, `ESCORT` | Chỉ xem chuyến được phân công; trả lịch trình, điểm dừng, ngựa kèm `stallNumber` |
 
 ---
