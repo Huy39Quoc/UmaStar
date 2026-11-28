@@ -41,8 +41,8 @@ Tài liệu theo dõi tiến độ triển khai Backend theo thứ tự ưu tiê
 |---|---|---|---|---|
 | [x] | Danh sách nước theo loại đơn | `GET /api/v1/countries?scope=DOMESTIC\|INTERNATIONAL` | Mọi role | `DOMESTIC`: `homeCountry=true`; `INTERNATIONAL`: `partner=true` & không phải nước sở tại; chỉ `active=true` |
 | [x] | Danh sách thành phố theo nước | `GET /api/v1/countries/{id}/cities` | Mọi role | Chỉ lấy `active=true` của đúng nước đó |
-| [ ] | CRUD Quốc gia / Thành phố | `/api/v1/admin/countries`, `/api/v1/admin/cities` | `LOGISTICS_MANAGER` | `isoCode` 2 chữ in hoa unique; tối đa 1 `homeCountry`; `timezone` hợp lệ (`ZoneId`); city không trùng tên trong 1 nước; soft delete `active=false` |
-| [ ] | CRUD Phương tiện | `/api/v1/vehicles` | `FLEET_COORDINATOR` | `codeOrPlate` unique; `capacityHorses ≥ 1`; không chuyển `MAINTENANCE` khi `IN_USE`; không xóa nếu đã có chuyến |
+| [x] | CRUD Quốc gia / Thành phố | `/api/v1/admin/countries`, `/api/v1/admin/cities` | `LOGISTICS_MANAGER` | `isoCode` 2 chữ in hoa unique; tối đa 1 `homeCountry`; `timezone` hợp lệ (`ZoneId`); city không trùng tên trong 1 nước; soft delete `active=false` |
+| [x] | CRUD Phương tiện | `/api/v1/vehicles` | `FLEET_COORDINATOR` | `codeOrPlate` unique; `capacityHorses ≥ 1`; không chuyển `MAINTENANCE` khi `IN_USE`; không xóa nếu đã có chuyến |
 | [ ] | CRUD Quy định kiểm dịch | `/api/v1/regulations` | `TRANSPORT_SPECIALIST` | Nước (và `city` nếu có) tồn tại; `requiredDocTypes` không rỗng; `quarantineDays ≥ 0`; `effectiveDate` hợp lệ; soft delete `active=false` |
 
 ---
@@ -147,13 +147,19 @@ Tài liệu theo dõi tiến độ triển khai Backend theo thứ tự ưu tiê
 <!-- AUTO-GENERATED-PROGRESS:START -->
 > Tự động cập nhật bởi `java scripts/SyncDocs.java`.
 
-- **Tiến độ checklist:** `18/62` hạng mục (29%)
-- **Thành phần đã có trong code:** `4` Controllers (`13` endpoints), `7` Services, `5` Repositories
+- **Tiến độ checklist:** `20/62` hạng mục (32%)
+- **Thành phần đã có trong code:** `7` Controllers (`22` endpoints), `8` Services, `7` Repositories
 
 ### Endpoints đã triển khai
 
 | Controller | Method | Path | Handler |
 |---|---|---|---|
+| `AdminCityController` | `GET` | `/api/v1/admin/cities/{id}` | `getCity()` |
+| `AdminCityController` | `POST` | `/api/v1/admin/cities` | `createCity()` |
+| `AdminCityController` | `DELETE` | `/api/v1/admin/cities/{id}` | `deactivateCity()` |
+| `AdminCountryController` | `GET` | `/api/v1/admin/countries/{id}` | `getCountry()` |
+| `AdminCountryController` | `POST` | `/api/v1/admin/countries` | `createCountry()` |
+| `AdminCountryController` | `DELETE` | `/api/v1/admin/countries/{id}` | `deactivateCountry()` |
 | `AuthController` | `POST` | `/api/v1/auth/register` | `register()` |
 | `AuthController` | `POST` | `/api/v1/auth/login` | `login()` |
 | `AuthController` | `POST` | `/api/v1/auth/refresh` | `refresh()` |
@@ -167,4 +173,7 @@ Tài liệu theo dõi tiến độ triển khai Backend theo thứ tự ưu tiê
 | `ProfileController` | `PUT` | `/api/v1/profile` | `updateProfile()` |
 | `UserController` | `POST` | `/api/v1/users` | `createUser()` |
 | `UserController` | `GET` | `/api/v1/users/{id}` | `getUser()` |
+| `VehicleController` | `GET` | `/api/v1/vehicles/{id}` | `getVehicle()` |
+| `VehicleController` | `POST` | `/api/v1/vehicles` | `createVehicle()` |
+| `VehicleController` | `DELETE` | `/api/v1/vehicles/{id}` | `deleteVehicle()` |
 <!-- AUTO-GENERATED-PROGRESS:END -->

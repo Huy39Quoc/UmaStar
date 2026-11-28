@@ -72,21 +72,32 @@
 | `umastar.config` | `class` | [`OpenApiConfig`](src/main/java/umastar/config/OpenApiConfig.java) | `@Configuration` |
 | `umastar.config` | `class` | [`SecurityConfig`](src/main/java/umastar/config/SecurityConfig.java) | Cau hinh Spring Security (stateless JWT, mo Swagger/Auth, tra JSON cho 401/403). |
 | `umastar.config` | `class` | [`SeedProperties`](src/main/java/umastar/config/SeedProperties.java) | Cau hinh danh sach tai khoan seed theo tung Role tu application.properties / .env. |
+| `umastar.controller` | `class` | [`AdminCityController`](src/main/java/umastar/controller/AdminCityController.java) | API quản trị danh mục thành phố (chỉ dành cho Logistics Manager). |
+| `umastar.controller` | `class` | [`AdminCountryController`](src/main/java/umastar/controller/AdminCountryController.java) | API quản trị danh mục quốc gia (chỉ dành cho Logistics Manager). |
 | `umastar.controller` | `class` | [`AuthController`](src/main/java/umastar/controller/AuthController.java) | API xác thực & tài khoản. Chỉ nhận/trả DTO, mọi nghiệp vụ nằm ở {@link AuthService}. |
 | `umastar.controller` | `class` | [`CountryController`](src/main/java/umastar/controller/CountryController.java) | API danh mục quốc gia và thành phố (mọi người dùng đã đăng nhập đều xem được). |
 | `umastar.controller` | `class` | [`ProfileController`](src/main/java/umastar/controller/ProfileController.java) | API xem và cập nhật hồ sơ cá nhân của người dùng đang đăng nhập. |
 | `umastar.controller` | `class` | [`UserController`](src/main/java/umastar/controller/UserController.java) | API quản lý tài khoản nhân viên & người dùng (chỉ dành cho Logistics Manager). |
+| `umastar.controller` | `class` | [`VehicleController`](src/main/java/umastar/controller/VehicleController.java) | API quản lý phương tiện vận chuyển (chỉ dành cho Fleet Coordinator). |
 | `umastar.dto.request` | `record` | [`ChangePasswordRequest`](src/main/java/umastar/dto/request/ChangePasswordRequest.java) | Yêu cầu đổi mật khẩu của người đang đăng nhập. Mật khẩu hiện tại chỉ kiểm tra "có nhập" (tài khoản cũ có thể có mật khẩu không theo chính sách mới); mật khẩu mới phải đạt chính sách chung. Cả hai giữ nguyên, không cắt khoảng trắng và không bao giờ được ghi ra log. |
+| `umastar.dto.request` | `record` | [`CreateCityRequest`](src/main/java/umastar/dto/request/CreateCityRequest.java) | Yêu cầu tạo thành phố ({@code POST /api/v1/admin/cities}). {@code timezone} là múi giờ IANA (VD: Asia/Ho_Chi_Minh), được kiểm tra ở tầng service. |
+| `umastar.dto.request` | `record` | [`CreateCountryRequest`](src/main/java/umastar/dto/request/CreateCountryRequest.java) | Yêu cầu tạo quốc gia ({@code POST /api/v1/admin/countries}). Mã quốc gia được cắt khoảng trắng và tự viết hoa trước khi kiểm tra ({@code vn} thành {@code VN}). {@code homeCountry} và {@code partner} mặc định {@code false} nếu không gửi. |
 | `umastar.dto.request` | `record` | [`CreateUserRequest`](src/main/java/umastar/dto/request/CreateUserRequest.java) | Yêu cầu tạo tài khoản nhân viên do Logistics Manager thực hiện ({@code POST /api/v1/users}). |
+| `umastar.dto.request` | `record` | [`CreateVehicleRequest`](src/main/java/umastar/dto/request/CreateVehicleRequest.java) | Yêu cầu tạo phương tiện ({@code POST /api/v1/vehicles}). Phương tiện mới luôn ở trạng thái {@code AVAILABLE}. Biển số / mã được cắt khoảng trắng và viết hoa để việc kiểm tra trùng không phụ thuộc hoa thường. |
 | `umastar.dto.request` | `record` | [`ForgotPasswordRequest`](src/main/java/umastar/dto/request/ForgotPasswordRequest.java) | Yêu cầu gửi hướng dẫn đặt lại mật khẩu qua email. Email được cắt khoảng trắng và viết thường. |
 | `umastar.dto.request` | `record` | [`LoginRequest`](src/main/java/umastar/dto/request/LoginRequest.java) | Yêu cầu đăng nhập. Chỉ kiểm tra "có nhập" và độ dài tối đa, KHÔNG kiểm tra chính sách mật khẩu hay định dạng email: tài khoản cũ có thể có mật khẩu không theo chính sách mới, và không muốn tiết lộ quy tắc cho kẻ dò mật khẩu. Email được cắt khoảng trắng và viết thường; mật khẩu giữ nguyên và không bao giờ ghi ra log. |
 | `umastar.dto.request` | `record` | [`RefreshTokenRequest`](src/main/java/umastar/dto/request/RefreshTokenRequest.java) | Yêu cầu làm mới phiên đăng nhập bằng refresh token nhận được lúc đăng nhập (hoặc lần làm mới trước). Token được cắt khoảng trắng hai đầu (do sao chép/dán) và không bao giờ được ghi ra log. |
 | `umastar.dto.request` | `record` | [`RegisterRequest`](src/main/java/umastar/dto/request/RegisterRequest.java) | Yêu cầu đăng ký tài khoản khách hàng (CLB hoặc cá nhân chủ ngựa). Dữ liệu được chuẩn hóa ngay khi tạo đối tượng: cắt khoảng trắng hai đầu, email viết thường, số điện thoại rỗng thành {@code null}. Riêng mật khẩu giữ nguyên, không bao giờ bị cắt hay ghi ra log. |
 | `umastar.dto.request` | `record` | [`ResetPasswordRequest`](src/main/java/umastar/dto/request/ResetPasswordRequest.java) | Yêu cầu đặt lại mật khẩu bằng token nhận từ email quên mật khẩu. Token được cắt khoảng trắng hai đầu; mật khẩu mới giữ nguyên và bị che khi ghi log. |
+| `umastar.dto.request` | `record` | [`UpdateCityRequest`](src/main/java/umastar/dto/request/UpdateCityRequest.java) | Yêu cầu cập nhật toàn bộ thông tin thành phố ({@code PUT /api/v1/admin/cities/{id}}). Không đổi được quốc gia của thành phố. {@code active} bắt buộc: gửi {@code true} để kích hoạt lại thành phố đã bị vô hiệu hóa (xóa mềm). |
+| `umastar.dto.request` | `record` | [`UpdateCountryRequest`](src/main/java/umastar/dto/request/UpdateCountryRequest.java) | Yêu cầu cập nhật toàn bộ thông tin quốc gia ({@code PUT /api/v1/admin/countries/{id}}). {@code active} bắt buộc: gửi {@code true} để kích hoạt lại một quốc gia đã bị vô hiệu hóa (xóa mềm). |
 | `umastar.dto.request` | `record` | [`UpdateProfileRequest`](src/main/java/umastar/dto/request/UpdateProfileRequest.java) | Yêu cầu cập nhật hồ sơ cá nhân ({@code PUT /api/v1/profile}). Không chứa {@code email} và {@code role} nên người dùng không thể tự thay đổi hai trường này. |
 | `umastar.dto.request` | `record` | [`UpdateUserStatusRequest`](src/main/java/umastar/dto/request/UpdateUserStatusRequest.java) | Yêu cầu cập nhật trạng thái tài khoản nhân viên ({@code PATCH /api/v1/users/{id}/status}). |
+| `umastar.dto.request` | `record` | [`UpdateVehicleRequest`](src/main/java/umastar/dto/request/UpdateVehicleRequest.java) | Yêu cầu cập nhật toàn bộ thông tin phương tiện ({@code PUT /api/v1/vehicles/{id}}). {@code status} chỉ được đổi qua lại giữa {@code AVAILABLE} và {@code MAINTENANCE}; {@code IN_USE} do hệ thống tự cập nhật theo chuyến nên không được đặt thủ công (kiểm tra ở tầng service). |
 | `umastar.dto.response` | `record` | [`AuthResponse`](src/main/java/umastar/dto/response/AuthResponse.java) | Bộ token trả về sau khi đăng nhập (và sau này khi làm mới token). {@code expiresIn} là thời gian sống của accessToken tính bằng giây. refreshToken chỉ xuất hiện ĐÚNG MỘT LẦN ở đây: DB chỉ lưu hash nên hệ thống không thể cấp lại bản gốc. |
+| `umastar.dto.response` | `record` | [`CityDetailResponse`](src/main/java/umastar/dto/response/CityDetailResponse.java) | Thông tin đầy đủ của thành phố dành cho màn hình quản trị (gồm quốc gia và trạng thái hoạt động). |
 | `umastar.dto.response` | `record` | [`CityResponse`](src/main/java/umastar/dto/response/CityResponse.java) | Thông tin thành phố trả về cho FE khi chọn điểm đi/đến. {@code timezone} là múi giờ IANA (VD: Asia/Ho_Chi_Minh) để hiển thị giờ địa phương. |
+| `umastar.dto.response` | `record` | [`CountryDetailResponse`](src/main/java/umastar/dto/response/CountryDetailResponse.java) | Thông tin đầy đủ của quốc gia dành cho màn hình quản trị (gồm cờ nội bộ và trạng thái hoạt động). |
 | `umastar.dto.response` | `record` | [`CountryResponse`](src/main/java/umastar/dto/response/CountryResponse.java) | Thông tin quốc gia trả về cho FE khi chọn điểm đi/đến (không chứa danh sách thành phố hay cờ nội bộ). |
 | `umastar.dto.response` | `record` | [`ErrorResponse`](src/main/java/umastar/dto/response/ErrorResponse.java) | - |
 | `umastar.dto.response` | `record` | [`MessageResponse`](src/main/java/umastar/dto/response/MessageResponse.java) | Phản hồi thông báo văn bản thống nhất cho các thao tác không trả dữ liệu chi tiết. |
@@ -94,6 +105,7 @@
 | `umastar.dto.response` | `record` | [`RegisterResponse`](src/main/java/umastar/dto/response/RegisterResponse.java) | Kết quả đăng ký thành công. Không chứa mật khẩu hay hash. Người dùng đăng nhập ở bước tiếp theo. |
 | `umastar.dto.response` | `record` | [`UserResponse`](src/main/java/umastar/dto/response/UserResponse.java) | Thông tin người dùng trả ra cho API hồ sơ cá nhân và quản lý tài khoản (không chứa thông tin nhạy cảm). |
 | `umastar.dto.response` | `record` | [`UserSummaryResponse`](src/main/java/umastar/dto/response/UserSummaryResponse.java) | Thông tin tóm tắt của người dùng trả về cho FE (không có mật khẩu hay trạng thái bảo mật). |
+| `umastar.dto.response` | `record` | [`VehicleResponse`](src/main/java/umastar/dto/response/VehicleResponse.java) | Thông tin phương tiện trả về cho màn hình điều phối. |
 | `umastar.entity` | `class` | [`BaseEntity`](src/main/java/umastar/entity/BaseEntity.java) | `@MappedSuperclass`, `@Getter`, `@Setter` |
 | `umastar.entity` | `class` | [`City`](src/main/java/umastar/entity/City.java) | `@Entity`, `@Table`, `@Getter @Setter @NoArgsConstructor` |
 | `umastar.entity` | `class` | [`Country`](src/main/java/umastar/entity/Country.java) | `@Entity`, `@Table`, `@Getter @Setter @NoArgsConstructor` |
@@ -145,11 +157,14 @@
 | `umastar.mapper` | `class` | [`CityMapper`](src/main/java/umastar/mapper/CityMapper.java) | Chuyển đổi Entity ↔ DTO cho danh mục thành phố. |
 | `umastar.mapper` | `class` | [`CountryMapper`](src/main/java/umastar/mapper/CountryMapper.java) | Chuyển đổi Entity ↔ DTO cho danh mục quốc gia. |
 | `umastar.mapper` | `class` | [`UserMapper`](src/main/java/umastar/mapper/UserMapper.java) | Chuyển đổi DTO ↔ Entity cho hồ sơ cá nhân ({@code /profile}) và quản lý người dùng ({@code /users}). |
+| `umastar.mapper` | `class` | [`VehicleMapper`](src/main/java/umastar/mapper/VehicleMapper.java) | Chuyển đổi Entity ↔ DTO cho phương tiện. |
 | `umastar.repository` | `interface` | [`CityRepository`](src/main/java/umastar/repository/CityRepository.java) | - |
 | `umastar.repository` | `interface` | [`CountryRepository`](src/main/java/umastar/repository/CountryRepository.java) | - |
 | `umastar.repository` | `interface` | [`CustomerRepository`](src/main/java/umastar/repository/CustomerRepository.java) | - |
 | `umastar.repository` | `interface` | [`RefreshTokenRepository`](src/main/java/umastar/repository/RefreshTokenRepository.java) | - |
+| `umastar.repository` | `interface` | [`TripRepository`](src/main/java/umastar/repository/TripRepository.java) | Mới chỉ có các truy vấn cần cho quản lý phương tiện; sẽ bổ sung khi làm chức năng chuyến vận chuyển. |
 | `umastar.repository` | `interface` | [`UserRepository`](src/main/java/umastar/repository/UserRepository.java) | - |
+| `umastar.repository` | `interface` | [`VehicleRepository`](src/main/java/umastar/repository/VehicleRepository.java) | - |
 | `umastar.security` | `record` | [`AccessTokenClaims`](src/main/java/umastar/security/AccessTokenClaims.java) | Noi dung da xac thuc cua access token. |
 | `umastar.security` | `class` | [`CustomUserDetailsService`](src/main/java/umastar/security/CustomUserDetailsService.java) | Nap thong tin nguoi dung cho Spring Security va JwtAuthenticationFilter. |
 | `umastar.security` | `class` | [`JwtAuthenticationFilter`](src/main/java/umastar/security/JwtAuthenticationFilter.java) | Doc Bearer access token tu header Authorization, xac thuc va gan UserPrincipal vao SecurityContext. - Khong co header Bearer: cho di tiep, Spring Security se tra 401 neu endpoint can dang nhap. - Co token nhung sai/het han/tai khoan bi khoa: tra loi JSON ngay tai day. |
@@ -157,17 +172,19 @@
 | `umastar.security` | `class` | [`SecurityUtils`](src/main/java/umastar/security/SecurityUtils.java) | Helper lay thong tin nguoi dung dang dang nhap tu SecurityContext. |
 | `umastar.security` | `class` | [`UserPrincipal`](src/main/java/umastar/security/UserPrincipal.java) | Nguoi dung dang dang nhap, dung trong SecurityContext. Chi giu cac truong can thiet (khong giu entity User de tranh lazy loading va lo du lieu). Quyen duoc dat dang ROLE_<TEN_ROLE> nen dung duoc @PreAuthorize("hasRole('LOGISTICS_MANAGER')"). |
 | `umastar.service` | `interface` | [`AuthService`](src/main/java/umastar/service/AuthService.java) | Nghiệp vụ xác thực & tài khoản. |
-| `umastar.service` | `interface` | [`CityService`](src/main/java/umastar/service/CityService.java) | Nghiệp vụ danh mục thành phố (đọc). |
-| `umastar.service` | `interface` | [`CountryService`](src/main/java/umastar/service/CountryService.java) | Nghiệp vụ danh mục quốc gia (đọc). |
+| `umastar.service` | `interface` | [`CityService`](src/main/java/umastar/service/CityService.java) | Nghiệp vụ danh mục thành phố: đọc cho mọi người dùng và quản trị (CRUD) cho Logistics Manager. |
+| `umastar.service` | `interface` | [`CountryService`](src/main/java/umastar/service/CountryService.java) | Nghiệp vụ danh mục quốc gia: đọc cho mọi người dùng và quản trị (CRUD) cho Logistics Manager. |
 | `umastar.service` | `interface` | [`FileStorageService`](src/main/java/umastar/service/FileStorageService.java) | - |
 | `umastar.service` | `interface` | [`MailService`](src/main/java/umastar/service/MailService.java) | Dịch vụ gửi email thông báo/xác thực. Có thể thay thế triển khai bằng SMTP thật mà không đổi tầng nghiệp vụ. |
 | `umastar.service` | `interface` | [`UserService`](src/main/java/umastar/service/UserService.java) | Nghiệp vụ hồ sơ cá nhân (/profile) và quản lý người dùng (/users). |
+| `umastar.service` | `interface` | [`VehicleService`](src/main/java/umastar/service/VehicleService.java) | Nghiệp vụ quản lý phương tiện vận chuyển (Fleet Coordinator). |
 | `umastar.service.impl` | `class` | [`AuthServiceImpl`](src/main/java/umastar/service/impl/AuthServiceImpl.java) | `@Service` |
 | `umastar.service.impl` | `class` | [`CityServiceImpl`](src/main/java/umastar/service/impl/CityServiceImpl.java) | `@Service` |
 | `umastar.service.impl` | `class` | [`CountryServiceImpl`](src/main/java/umastar/service/impl/CountryServiceImpl.java) | `@Service` |
 | `umastar.service.impl` | `class` | [`FileStorageServiceImpl`](src/main/java/umastar/service/impl/FileStorageServiceImpl.java) | Triển khai {@link FileStorageService} lưu file lên ổ đĩa local theo cấu trúc: {@code {UPLOAD_DIR}/{loai}/{nam}/{thang}/{uuid}.{duoi}}. Tên file gốc KHÔNG bao giờ được dùng để đặt tên trên đĩa, nên không thể ghi đè file khác hay thoát khỏi thư mục upload. |
 | `umastar.service.impl` | `class` | [`MailServiceImpl`](src/main/java/umastar/service/impl/MailServiceImpl.java) | Triển khai {@link MailService} cho môi trường phát triển (ghi log thay vì gửi SMTP thật). |
 | `umastar.service.impl` | `class` | [`UserServiceImpl`](src/main/java/umastar/service/impl/UserServiceImpl.java) | `@Service` |
+| `umastar.service.impl` | `class` | [`VehicleServiceImpl`](src/main/java/umastar/service/impl/VehicleServiceImpl.java) | `@Service` |
 | `umastar.storage` | `enum` | [`AllowedFileType`](src/main/java/umastar/storage/AllowedFileType.java) | Cac dinh dang file duoc phep. Kiem tra 3 lop: duoi file, MIME khai bao, va quan trong nhat la "chu ky" (magic bytes) o dau file, vi duoi va MIME do client tu khai bao nen co the gia mao. |
 | `umastar.storage` | `enum` | [`FileCategory`](src/main/java/umastar/storage/FileCategory.java) | Loai file nghiep vu: quyet dinh thu muc luu, dung luong toi da va dinh dang cho phep. Gioi han o day KHONG duoc lon hon MAX_FILE_SIZE trong .env (Spring chan truoc khi toi day). |
 | `umastar.storage` | `record` | [`StoredFile`](src/main/java/umastar/storage/StoredFile.java) | Ket qua luu file. @param path duong dan TUONG DOI so voi thu muc upload (vd documents/2026/11/<uuid>.pdf) - luu vao cot file_url @param originalName ten file goc nguoi dung tai len (chi de hien thi) @param contentType MIME da duoc xac thuc theo noi dung file @param size dung luong (byte) |
@@ -175,6 +192,7 @@
 | `umastar.util` | `class` | [`PageableFactory`](src/main/java/umastar/util/PageableFactory.java) | - |
 | `umastar.util` | `class` | [`PasswordPolicy`](src/main/java/umastar/util/PasswordPolicy.java) | Chinh sach mat khau dung chung (seed Manager, dang ky, doi mat khau, dat lai mat khau): 8 ky tu tro len, co chu hoa, chu thuong, chu so, va toi da 72 byte (gioi han cua BCrypt). |
 | `umastar.util` | `class` | [`SecureTokenGenerator`](src/main/java/umastar/util/SecureTokenGenerator.java) | - |
+| `umastar.util` | `class` | [`SqlLike`](src/main/java/umastar/util/SqlLike.java) | Dựng mẫu tìm kiếm {@code LIKE '%từ khóa%'} an toàn: thoát các ký tự đặc biệt {@code % _ \} để người dùng không "chèn" wildcard. |
 | `umastar.util` | `class` | [`TokenHasher`](src/main/java/umastar/util/TokenHasher.java) | - |
 | `umastar.validation` | `class` | [`StrongPassword`](src/main/java/umastar/validation/StrongPassword.java) | `@Documented`, `@Constraint`, `@Target`, `@Retention` |
 | `umastar.validation` | `class` | [`StrongPasswordValidator`](src/main/java/umastar/validation/StrongPasswordValidator.java) | Bộ kiểm tra của {@link StrongPassword}: ủy quyền hoàn toàn cho {@link PasswordPolicy} để chỉ có một nguồn quy tắc. |
@@ -185,19 +203,28 @@
 
 | Controller | Method | Path | Handler | Mô tả |
 |---|---|---|---|---|
-| `AuthController` | `POST` | `/api/v1/auth/register` | `register()` | Đăng ký tài khoản khách hàng |
-| `AuthController` | `POST` | `/api/v1/auth/login` | `login()` | Đăng nhập |
-| `AuthController` | `POST` | `/api/v1/auth/refresh` | `refresh()` | Làm mới access token (xoay vòng refresh token) |
-| `AuthController` | `POST` | `/api/v1/auth/logout` | `logout()` | Đăng xuất khỏi thiết bị hiện tại |
-| `AuthController` | `POST` | `/api/v1/auth/logout-all` | `logoutAll()` | Đăng xuất khỏi tất cả thiết bị |
-| `AuthController` | `POST` | `/api/v1/auth/change-password` | `changePassword()` | Đổi mật khẩu |
-| `AuthController` | `POST` | `/api/v1/auth/forgot-password` | `forgotPassword()` | Quên mật khẩu |
-| `AuthController` | `POST` | `/api/v1/auth/reset-password` | `resetPassword()` | Đặt lại mật khẩu |
-| `CountryController` | `GET` | `/api/v1/countries/{id}/cities` | `listCities()` | Danh sách thành phố của một quốc gia |
-| `ProfileController` | `GET` | `/api/v1/profile` | `getProfile()` | Xem hồ sơ cá nhân |
-| `ProfileController` | `PUT` | `/api/v1/profile` | `updateProfile()` | Cập nhật hồ sơ cá nhân |
-| `UserController` | `POST` | `/api/v1/users` | `createUser()` | Tạo tài khoản nhân viên |
-| `UserController` | `GET` | `/api/v1/users/{id}` | `getUser()` | Chi tiết người dùng |
+| `AdminCityController` | `GET` | `/api/v1/admin/cities/{id}` | `getCity()` | - |
+| `AdminCityController` | `POST` | `/api/v1/admin/cities` | `createCity()` | - |
+| `AdminCityController` | `DELETE` | `/api/v1/admin/cities/{id}` | `deactivateCity()` | - |
+| `AdminCountryController` | `GET` | `/api/v1/admin/countries/{id}` | `getCountry()` | - |
+| `AdminCountryController` | `POST` | `/api/v1/admin/countries` | `createCountry()` | - |
+| `AdminCountryController` | `DELETE` | `/api/v1/admin/countries/{id}` | `deactivateCountry()` | - |
+| `AuthController` | `POST` | `/api/v1/auth/register` | `register()` | - |
+| `AuthController` | `POST` | `/api/v1/auth/login` | `login()` | - |
+| `AuthController` | `POST` | `/api/v1/auth/refresh` | `refresh()` | - |
+| `AuthController` | `POST` | `/api/v1/auth/logout` | `logout()` | - |
+| `AuthController` | `POST` | `/api/v1/auth/logout-all` | `logoutAll()` | - |
+| `AuthController` | `POST` | `/api/v1/auth/change-password` | `changePassword()` | - |
+| `AuthController` | `POST` | `/api/v1/auth/forgot-password` | `forgotPassword()` | - |
+| `AuthController` | `POST` | `/api/v1/auth/reset-password` | `resetPassword()` | - |
+| `CountryController` | `GET` | `/api/v1/countries/{id}/cities` | `listCities()` | - |
+| `ProfileController` | `GET` | `/api/v1/profile` | `getProfile()` | - |
+| `ProfileController` | `PUT` | `/api/v1/profile` | `updateProfile()` | - |
+| `UserController` | `POST` | `/api/v1/users` | `createUser()` | - |
+| `UserController` | `GET` | `/api/v1/users/{id}` | `getUser()` | - |
+| `VehicleController` | `GET` | `/api/v1/vehicles/{id}` | `getVehicle()` | - |
+| `VehicleController` | `POST` | `/api/v1/vehicles` | `createVehicle()` | - |
+| `VehicleController` | `DELETE` | `/api/v1/vehicles/{id}` | `deleteVehicle()` | - |
 
 ### Business Services
 
@@ -215,8 +242,16 @@
   - `resetPassword(ResetPasswordRequest request)` -> `void`: Đặt lại mật khẩu bằng mã reset từ email. {@code noRollbackFor = AppException}: xóa token đã hết hạn vẫn được lưu lại để tránh kiểm tra lặp.
 - **`CityServiceImpl`** (`src/main/java/umastar/service/impl/CityServiceImpl.java`)
   - `listCities(UUID countryId)` -> `List<CityResponse>`
+  - `getCity(UUID cityId)` -> `CityDetailResponse`
+  - `createCity(CreateCityRequest request)` -> `CityDetailResponse`: Quốc gia phải tồn tại (có thể đang bị vô hiệu hóa để chuẩn bị dữ liệu trước), múi giờ phải hợp lệ, tên không trùng trong cùng quốc gia (không phân biệt hoa thường, tính cả thành phố đã vô hiệu hóa). Trùng tên song song được ràng buộc {@code uk_city_country_name} của DB chặn lại.
+  - `updateCity(UUID cityId, UpdateCityRequest request)` -> `CityDetailResponse`
+  - `deactivateCity(UUID cityId)` -> `void`
 - **`CountryServiceImpl`** (`src/main/java/umastar/service/impl/CountryServiceImpl.java`)
   - `listCountries(TransportType scope)` -> `List<CountryResponse>`
+  - `getCountry(UUID countryId)` -> `CountryDetailResponse`
+  - `createCountry(CreateCountryRequest request)` -> `CountryDetailResponse`: Mã quốc gia phải chưa dùng; chỉ được có MỘT nước sở tại trong toàn hệ thống (tính cả nước đã vô hiệu hóa). Hai yêu cầu tạo cùng mã chạy song song: ràng buộc {@code uk_countries_iso_code} của DB sẽ chặn và {@code GlobalExceptionHandler} đổi thành COUNTRY_CODE_ALREADY_EXISTS.
+  - `updateCountry(UUID countryId, UpdateCountryRequest request)` -> `CountryDetailResponse`
+  - `deactivateCountry(UUID countryId)` -> `void`
 - **`FileStorageServiceImpl`** (`src/main/java/umastar/service/impl/FileStorageServiceImpl.java`): Triển khai {@link FileStorageService} lưu file lên ổ đĩa local theo cấu trúc: {@code {UPLOAD_DIR}/{loai}/{nam}/{thang}/{uuid}.{duoi}}. Tên file gốc KHÔNG bao giờ được dùng để đặt tên trên đĩa, nên không thể ghi đè file khác hay thoát khỏi thư mục upload.
   - `store(MultipartFile file, FileCategory category)` -> `StoredFile`
   - `load(String path)` -> `Resource`
@@ -229,6 +264,11 @@
   - `createUser(CreateUserRequest request)` -> `UserResponse`
   - `getUser(UUID userId)` -> `UserResponse`
   - `updateUserStatus(UUID currentUserId, UUID targetUserId, UpdateUserStatusRequest request)` -> `UserResponse`
+- **`VehicleServiceImpl`** (`src/main/java/umastar/service/impl/VehicleServiceImpl.java`)
+  - `getVehicle(UUID vehicleId)` -> `VehicleResponse`
+  - `createVehicle(CreateVehicleRequest request)` -> `VehicleResponse`: Hai yêu cầu tạo cùng biển số chạy song song: ràng buộc {@code uk_vehicles_code_or_plate} của DB sẽ chặn và {@code GlobalExceptionHandler} đổi thành VEHICLE_CODE_ALREADY_EXISTS.
+  - `updateVehicle(UUID vehicleId, UpdateVehicleRequest request)` -> `VehicleResponse`: Mọi kiểm tra chạy TRƯỚC khi gán dữ liệu, nên khi báo lỗi thì phương tiện không bị đổi dở.
+  - `deleteVehicle(UUID vehicleId)` -> `void`
 
 ### Repositories
 
@@ -236,7 +276,9 @@
 - **`CountryRepository`** (`src/main/java/umastar/repository/CountryRepository.java`)
 - **`CustomerRepository`** (`src/main/java/umastar/repository/CustomerRepository.java`)
 - **`RefreshTokenRepository`** (`src/main/java/umastar/repository/RefreshTokenRepository.java`)
+- **`TripRepository`** (`src/main/java/umastar/repository/TripRepository.java`)
 - **`UserRepository`** (`src/main/java/umastar/repository/UserRepository.java`)
+- **`VehicleRepository`** (`src/main/java/umastar/repository/VehicleRepository.java`)
 
 ### Resources & Cấu hình
 

@@ -4,6 +4,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import umastar.dto.request.CreateCityRequest;
+import umastar.dto.request.UpdateCityRequest;
+import umastar.dto.response.CityDetailResponse;
 import umastar.dto.response.CityResponse;
 import umastar.entity.City;
 import umastar.entity.Country;
@@ -18,8 +21,10 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -103,6 +108,69 @@ class CityServiceImplTest {
 
         assertEquals(ErrorCode.INVALID_REQUEST, ex.getErrorCode());
         verifyNoInteractions(countryRepository, cityRepository);
+    }
+
+    @Test
+    void createCityValidatesCountryTimeZoneAndDuplicateName() {
+        CityServiceImpl service = new CityServiceImpl(countryRepository, cityRepository, new CityMapper());
+        UUID countryId = UUID.randomUUID();
+        Country jp = new Country();
+        jp.setId(countryId);
+        jp.setName("Japan");
+        jp.setActive(false);
+
+        when(countryRepository.findById(countryId)).thenReturn(Optional.of(jp));
+
+        AppException tzEx = assertThrows(AppException.class, () -> service.createCity(
+                new CreateCityRequest(countryId, "Tokyo", "Tokyo", "Kanto", "+09:00", true)));
+        assertEquals(ErrorCode.INVALID_TIMEZONE, tzEx.getErrorCode());
+
+        when(cityRepository.existsByCountryIdAndNameIgnoreCase(countryId, "Tokyo")).thenReturn(true);
+        AppException dupEx = assertThrows(AppException.class, () -> service.createCity(
+                new CreateCityRequest(countryId, "Tokyo", "Tokyo", "Kanto", "Asia/Tokyo", true)));
+        assertEquals(ErrorCode.CITY_NAME_ALREADY_EXISTS, dupEx.getErrorCode());
+
+        when(cityRepository.existsByCountryIdAndNameIgnoreCase(countryId, "Osaka")).thenReturn(false);
+        when(cityRepository.saveAndFlush(any(City.class))).thenAnswer(inv -> {
+            City c = inv.getArgument(0);
+            c.setId(UUID.randomUUID());
+            return c;
+        });
+
+        CityDetailResponse created = service.createCity(
+                new CreateCityRequest(countryId, "Osaka", null, "Kansai", "Asia/Tokyo", true));
+        assertEquals("Osaka", created.name());
+        assertEquals("Japan", created.countryName());
+        assertTrue(created.active());
+    }
+
+    @Test
+    void updateAndDeactivateCityWork() {
+        CityServiceImpl service = new CityServiceImpl(countryRepository, cityRepository, new CityMapper());
+        UUID countryId = UUID.randomUUID();
+        UUID cityId = UUID.randomUUID();
+        Country vn = new Country();
+        vn.setId(countryId);
+        vn.setName("Vietnam");
+        City city = new City();
+        city.setId(cityId);
+        city.setCountry(vn);
+        city.setName("Hanoi");
+        city.setTimezone("Asia/Ho_Chi_Minh");
+        city.setActive(false);
+
+        when(cityRepository.findById(cityId)).thenReturn(Optional.of(city));
+        when(cityRepository.existsByCountryIdAndNameIgnoreCaseAndIdNot(countryId, "Ha Noi", cityId)).thenReturn(false);
+        when(cityRepository.saveAndFlush(any(City.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        CityDetailResponse updated = service.updateCity(cityId,
+                new UpdateCityRequest("Ha Noi", "Hà Nội", "Miền Bắc", "Asia/Ho_Chi_Minh", true, true));
+        assertTrue(updated.active());
+        assertEquals("Ha Noi", updated.name());
+
+        service.deactivateCity(cityId);
+        assertFalse(city.isActive());
+        verify(cityRepository).save(city);
     }
 }
 

@@ -29,7 +29,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/users")
 @PreAuthorize("hasRole('LOGISTICS_MANAGER')")
-@Tag(name = "Users", description = "Quản lý tài khoản nhân viên (Logistics Manager)")
+@Tag(name = "Users", description = "Quản lý tài khoản nhân viên — [Chỉ LOGISTICS_MANAGER]")
 public class UserController {
 
     private final UserService userService;
@@ -39,7 +39,8 @@ public class UserController {
     }
 
     /** Tạo tài khoản nhân viên mới (không dùng cho CUSTOMER). */
-    @Operation(summary = "Tạo tài khoản nhân viên")
+    @Operation(summary = "[LOGISTICS_MANAGER] Tạo tài khoản nhân viên",
+            description = "Quyền truy cập: Chỉ LOGISTICS_MANAGER (tạo tài khoản nhân viên nội bộ, không tạo CUSTOMER).")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public UserResponse createUser(@Valid @RequestBody CreateUserRequest request) {
@@ -47,7 +48,8 @@ public class UserController {
     }
 
     /** Danh sách người dùng có lọc theo role, status, từ khóa và phân trang. */
-    @Operation(summary = "Danh sách người dùng")
+    @Operation(summary = "[LOGISTICS_MANAGER] Danh sách người dùng",
+            description = "Quyền truy cập: Chỉ LOGISTICS_MANAGER (lọc theo role, status, từ khóa và phân trang).")
     @GetMapping
     public PageResponse<UserResponse> listUsers(
             @RequestParam(required = false) Role role,
@@ -60,14 +62,16 @@ public class UserController {
     }
 
     /** Xem chi tiết một tài khoản theo ID. */
-    @Operation(summary = "Chi tiết người dùng")
+    @Operation(summary = "[LOGISTICS_MANAGER] Chi tiết người dùng",
+            description = "Quyền truy cập: Chỉ LOGISTICS_MANAGER.")
     @GetMapping("/{id}")
     public UserResponse getUser(@PathVariable UUID id) {
         return userService.getUser(id);
     }
 
     /** Khóa, vô hiệu hóa hoặc kích hoạt lại tài khoản người dùng. */
-    @Operation(summary = "Cập nhật trạng thái tài khoản")
+    @Operation(summary = "[LOGISTICS_MANAGER] Cập nhật trạng thái tài khoản",
+            description = "Quyền truy cập: Chỉ LOGISTICS_MANAGER (khóa/mở khóa tài khoản; không tự vô hiệu hóa mình hoặc Manager cuối cùng).")
     @PatchMapping("/{id}/status")
     public UserResponse updateUserStatus(@PathVariable UUID id,
                                          @Valid @RequestBody UpdateUserStatusRequest request) {

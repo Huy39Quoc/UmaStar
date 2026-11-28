@@ -19,7 +19,13 @@ public class OpenApiConfig {
                 .info(new Info()
                         .title("UmaStar API")
                         .version("v1")
-                        .description("Racehorse Transport System Backend API"))
+                        .description("""
+                                Racehorse Transport System Backend API.
+
+                                Quy ước phân quyền trên Swagger:
+                                - [Công khai]: Không cần Access Token (`register`, `login`, `refresh`, `logout`, `forgot-password`, `reset-password`).
+                                - [Đã đăng nhập - Mọi role]: Cần Bearer JWT của bất kỳ tài khoản `ACTIVE` nào (`CUSTOMER`, `LOGISTICS_MANAGER`, `TRANSPORT_SPECIALIST`, `FLEET_COORDINATOR`, `DRIVER`, `ESCORT`).
+                                - [LOGISTICS_MANAGER] / [FLEET_COORDINATOR]: Chỉ role được liệt kê mới gọi được (sai role trả `403 FORBIDDEN`)."""))
                 .addSecurityItem(new SecurityRequirement().addList(SECURITY_SCHEME_NAME))
                 .components(new Components().addSecuritySchemes(
                         SECURITY_SCHEME_NAME,

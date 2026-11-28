@@ -25,11 +25,11 @@ import umastar.repository.UserRepository;
 import umastar.service.UserService;
 import umastar.util.InputNormalizer;
 import umastar.util.PageableFactory;
+import umastar.util.SqlLike;
 
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -154,20 +154,14 @@ public class UserServiceImpl implements UserService {
             }
             String cleanKeyword = InputNormalizer.blankToNull(keyword);
             if (cleanKeyword != null) {
-                String pattern = "%" + escapeLike(cleanKeyword.toLowerCase(Locale.ROOT)) + "%";
+                String pattern = SqlLike.contains(cleanKeyword);
                 predicates.add(cb.or(
-                        cb.like(cb.lower(root.get("fullName")), pattern, '\\'),
-                        cb.like(cb.lower(root.get("email")), pattern, '\\')
+                        cb.like(cb.lower(root.get("fullName")), pattern, SqlLike.ESCAPE),
+                        cb.like(cb.lower(root.get("email")), pattern, SqlLike.ESCAPE)
                 ));
             }
             return cb.and(predicates.toArray(Predicate[]::new));
         };
-    }
-
-    private static String escapeLike(String value) {
-        return value.replace("\\", "\\\\")
-                .replace("%", "\\%")
-                .replace("_", "\\_");
     }
 }
 
