@@ -73,6 +73,7 @@
 | `umastar.config` | `class` | [`SecurityConfig`](src/main/java/umastar/config/SecurityConfig.java) | Cau hinh Spring Security (stateless JWT, mo Swagger/Auth, tra JSON cho 401/403). |
 | `umastar.config` | `class` | [`SeedProperties`](src/main/java/umastar/config/SeedProperties.java) | Cau hinh danh sach tai khoan seed theo tung Role tu application.properties / .env. |
 | `umastar.controller` | `class` | [`AuthController`](src/main/java/umastar/controller/AuthController.java) | API xác thực & tài khoản. Chỉ nhận/trả DTO, mọi nghiệp vụ nằm ở {@link AuthService}. |
+| `umastar.controller` | `class` | [`CountryController`](src/main/java/umastar/controller/CountryController.java) | API danh mục quốc gia và thành phố (mọi người dùng đã đăng nhập đều xem được). |
 | `umastar.controller` | `class` | [`ProfileController`](src/main/java/umastar/controller/ProfileController.java) | API xem và cập nhật hồ sơ cá nhân của người dùng đang đăng nhập. |
 | `umastar.controller` | `class` | [`UserController`](src/main/java/umastar/controller/UserController.java) | API quản lý tài khoản nhân viên & người dùng (chỉ dành cho Logistics Manager). |
 | `umastar.dto.request` | `record` | [`ChangePasswordRequest`](src/main/java/umastar/dto/request/ChangePasswordRequest.java) | Yêu cầu đổi mật khẩu của người đang đăng nhập. Mật khẩu hiện tại chỉ kiểm tra "có nhập" (tài khoản cũ có thể có mật khẩu không theo chính sách mới); mật khẩu mới phải đạt chính sách chung. Cả hai giữ nguyên, không cắt khoảng trắng và không bao giờ được ghi ra log. |
@@ -85,6 +86,8 @@
 | `umastar.dto.request` | `record` | [`UpdateProfileRequest`](src/main/java/umastar/dto/request/UpdateProfileRequest.java) | Yêu cầu cập nhật hồ sơ cá nhân ({@code PUT /api/v1/profile}). Không chứa {@code email} và {@code role} nên người dùng không thể tự thay đổi hai trường này. |
 | `umastar.dto.request` | `record` | [`UpdateUserStatusRequest`](src/main/java/umastar/dto/request/UpdateUserStatusRequest.java) | Yêu cầu cập nhật trạng thái tài khoản nhân viên ({@code PATCH /api/v1/users/{id}/status}). |
 | `umastar.dto.response` | `record` | [`AuthResponse`](src/main/java/umastar/dto/response/AuthResponse.java) | Bộ token trả về sau khi đăng nhập (và sau này khi làm mới token). {@code expiresIn} là thời gian sống của accessToken tính bằng giây. refreshToken chỉ xuất hiện ĐÚNG MỘT LẦN ở đây: DB chỉ lưu hash nên hệ thống không thể cấp lại bản gốc. |
+| `umastar.dto.response` | `record` | [`CityResponse`](src/main/java/umastar/dto/response/CityResponse.java) | Thông tin thành phố trả về cho FE khi chọn điểm đi/đến. {@code timezone} là múi giờ IANA (VD: Asia/Ho_Chi_Minh) để hiển thị giờ địa phương. |
+| `umastar.dto.response` | `record` | [`CountryResponse`](src/main/java/umastar/dto/response/CountryResponse.java) | Thông tin quốc gia trả về cho FE khi chọn điểm đi/đến (không chứa danh sách thành phố hay cờ nội bộ). |
 | `umastar.dto.response` | `record` | [`ErrorResponse`](src/main/java/umastar/dto/response/ErrorResponse.java) | - |
 | `umastar.dto.response` | `record` | [`MessageResponse`](src/main/java/umastar/dto/response/MessageResponse.java) | Phản hồi thông báo văn bản thống nhất cho các thao tác không trả dữ liệu chi tiết. |
 | `umastar.dto.response` | `record` | [`PageResponse`](src/main/java/umastar/dto/response/PageResponse.java) | - |
@@ -139,7 +142,11 @@
 | `umastar.exception` | `enum` | [`ErrorCode`](src/main/java/umastar/exception/ErrorCode.java) | Ma loi thong nhat. Moi loi gom: ma so (code), thong bao hien thi cho nguoi dung, HTTP status. QUY UOC DAI MA (moi nhom 100 so, khong de trung): 100 AUTH \| 200 TOKEN \| 300 USER \| 400 PASSWORD \| 500 FILE \| 600 SYSTEM 700 MASTER DATA (Country, City) \| 800 VEHICLE \| 900 REGULATION 1000 CUSTOMER \| 1100 HORSE \| 1200 NOTIFICATION (du kien) 1300 ORDER \| 1400 LEGAL_DOCUMENT \| 1500 TRIP \| 1600 TRIP_STOP, ASSIGNMENT 1700 INCIDENT, ROUTE_CHANGE \| 1800 HANDOVER \| 1900 REPORT Them loi moi: chon so tiep theo trong dung nhom. ErrorCodeTest se bao loi neu bi trung so. |
 | `umastar.exception` | `class` | [`GlobalExceptionHandler`](src/main/java/umastar/exception/GlobalExceptionHandler.java) | Bo hung loi tap trung. Moi loi -> ErrorResponse thong nhat. Quy tac: loi cua client (4xx) khong log stack trace; loi he thong (5xx) luon log day du. |
 | `umastar.mapper` | `class` | [`AuthMapper`](src/main/java/umastar/mapper/AuthMapper.java) | Chuyển đổi DTO ↔ Entity cho module xác thực & tài khoản ({@code auth}). |
+| `umastar.mapper` | `class` | [`CityMapper`](src/main/java/umastar/mapper/CityMapper.java) | Chuyển đổi Entity ↔ DTO cho danh mục thành phố. |
+| `umastar.mapper` | `class` | [`CountryMapper`](src/main/java/umastar/mapper/CountryMapper.java) | Chuyển đổi Entity ↔ DTO cho danh mục quốc gia. |
 | `umastar.mapper` | `class` | [`UserMapper`](src/main/java/umastar/mapper/UserMapper.java) | Chuyển đổi DTO ↔ Entity cho hồ sơ cá nhân ({@code /profile}) và quản lý người dùng ({@code /users}). |
+| `umastar.repository` | `interface` | [`CityRepository`](src/main/java/umastar/repository/CityRepository.java) | - |
+| `umastar.repository` | `interface` | [`CountryRepository`](src/main/java/umastar/repository/CountryRepository.java) | - |
 | `umastar.repository` | `interface` | [`CustomerRepository`](src/main/java/umastar/repository/CustomerRepository.java) | - |
 | `umastar.repository` | `interface` | [`RefreshTokenRepository`](src/main/java/umastar/repository/RefreshTokenRepository.java) | - |
 | `umastar.repository` | `interface` | [`UserRepository`](src/main/java/umastar/repository/UserRepository.java) | - |
@@ -150,10 +157,14 @@
 | `umastar.security` | `class` | [`SecurityUtils`](src/main/java/umastar/security/SecurityUtils.java) | Helper lay thong tin nguoi dung dang dang nhap tu SecurityContext. |
 | `umastar.security` | `class` | [`UserPrincipal`](src/main/java/umastar/security/UserPrincipal.java) | Nguoi dung dang dang nhap, dung trong SecurityContext. Chi giu cac truong can thiet (khong giu entity User de tranh lazy loading va lo du lieu). Quyen duoc dat dang ROLE_<TEN_ROLE> nen dung duoc @PreAuthorize("hasRole('LOGISTICS_MANAGER')"). |
 | `umastar.service` | `interface` | [`AuthService`](src/main/java/umastar/service/AuthService.java) | Nghiệp vụ xác thực & tài khoản. |
+| `umastar.service` | `interface` | [`CityService`](src/main/java/umastar/service/CityService.java) | Nghiệp vụ danh mục thành phố (đọc). |
+| `umastar.service` | `interface` | [`CountryService`](src/main/java/umastar/service/CountryService.java) | Nghiệp vụ danh mục quốc gia (đọc). |
 | `umastar.service` | `interface` | [`FileStorageService`](src/main/java/umastar/service/FileStorageService.java) | - |
 | `umastar.service` | `interface` | [`MailService`](src/main/java/umastar/service/MailService.java) | Dịch vụ gửi email thông báo/xác thực. Có thể thay thế triển khai bằng SMTP thật mà không đổi tầng nghiệp vụ. |
 | `umastar.service` | `interface` | [`UserService`](src/main/java/umastar/service/UserService.java) | Nghiệp vụ hồ sơ cá nhân (/profile) và quản lý người dùng (/users). |
 | `umastar.service.impl` | `class` | [`AuthServiceImpl`](src/main/java/umastar/service/impl/AuthServiceImpl.java) | `@Service` |
+| `umastar.service.impl` | `class` | [`CityServiceImpl`](src/main/java/umastar/service/impl/CityServiceImpl.java) | `@Service` |
+| `umastar.service.impl` | `class` | [`CountryServiceImpl`](src/main/java/umastar/service/impl/CountryServiceImpl.java) | `@Service` |
 | `umastar.service.impl` | `class` | [`FileStorageServiceImpl`](src/main/java/umastar/service/impl/FileStorageServiceImpl.java) | Triển khai {@link FileStorageService} lưu file lên ổ đĩa local theo cấu trúc: {@code {UPLOAD_DIR}/{loai}/{nam}/{thang}/{uuid}.{duoi}}. Tên file gốc KHÔNG bao giờ được dùng để đặt tên trên đĩa, nên không thể ghi đè file khác hay thoát khỏi thư mục upload. |
 | `umastar.service.impl` | `class` | [`MailServiceImpl`](src/main/java/umastar/service/impl/MailServiceImpl.java) | Triển khai {@link MailService} cho môi trường phát triển (ghi log thay vì gửi SMTP thật). |
 | `umastar.service.impl` | `class` | [`UserServiceImpl`](src/main/java/umastar/service/impl/UserServiceImpl.java) | `@Service` |
@@ -182,6 +193,7 @@
 | `AuthController` | `POST` | `/api/v1/auth/change-password` | `changePassword()` | Đổi mật khẩu |
 | `AuthController` | `POST` | `/api/v1/auth/forgot-password` | `forgotPassword()` | Quên mật khẩu |
 | `AuthController` | `POST` | `/api/v1/auth/reset-password` | `resetPassword()` | Đặt lại mật khẩu |
+| `CountryController` | `GET` | `/api/v1/countries/{id}/cities` | `listCities()` | Danh sách thành phố của một quốc gia |
 | `ProfileController` | `GET` | `/api/v1/profile` | `getProfile()` | Xem hồ sơ cá nhân |
 | `ProfileController` | `PUT` | `/api/v1/profile` | `updateProfile()` | Cập nhật hồ sơ cá nhân |
 | `UserController` | `POST` | `/api/v1/users` | `createUser()` | Tạo tài khoản nhân viên |
@@ -201,6 +213,10 @@
   - `changePassword(UUID userId, ChangePasswordRequest request)` -> `void`: Đổi mật khẩu của người đang đăng nhập.
   - `forgotPassword(ForgotPasswordRequest request)` -> `MessageResponse`: Yêu cầu đặt lại mật khẩu: rate limit đồng nhất cho cả email có thật và không có thật để không lộ tài khoản, sinh token ngẫu nhiên lưu hash SHA-256 + hạn dùng + thời điểm yêu cầu trên {@code users}.
   - `resetPassword(ResetPasswordRequest request)` -> `void`: Đặt lại mật khẩu bằng mã reset từ email. {@code noRollbackFor = AppException}: xóa token đã hết hạn vẫn được lưu lại để tránh kiểm tra lặp.
+- **`CityServiceImpl`** (`src/main/java/umastar/service/impl/CityServiceImpl.java`)
+  - `listCities(UUID countryId)` -> `List<CityResponse>`
+- **`CountryServiceImpl`** (`src/main/java/umastar/service/impl/CountryServiceImpl.java`)
+  - `listCountries(TransportType scope)` -> `List<CountryResponse>`
 - **`FileStorageServiceImpl`** (`src/main/java/umastar/service/impl/FileStorageServiceImpl.java`): Triển khai {@link FileStorageService} lưu file lên ổ đĩa local theo cấu trúc: {@code {UPLOAD_DIR}/{loai}/{nam}/{thang}/{uuid}.{duoi}}. Tên file gốc KHÔNG bao giờ được dùng để đặt tên trên đĩa, nên không thể ghi đè file khác hay thoát khỏi thư mục upload.
   - `store(MultipartFile file, FileCategory category)` -> `StoredFile`
   - `load(String path)` -> `Resource`
@@ -216,6 +232,8 @@
 
 ### Repositories
 
+- **`CityRepository`** (`src/main/java/umastar/repository/CityRepository.java`)
+- **`CountryRepository`** (`src/main/java/umastar/repository/CountryRepository.java`)
 - **`CustomerRepository`** (`src/main/java/umastar/repository/CustomerRepository.java`)
 - **`RefreshTokenRepository`** (`src/main/java/umastar/repository/RefreshTokenRepository.java`)
 - **`UserRepository`** (`src/main/java/umastar/repository/UserRepository.java`)

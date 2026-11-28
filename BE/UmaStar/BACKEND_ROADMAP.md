@@ -39,8 +39,8 @@ Tài liệu theo dõi tiến độ triển khai Backend theo thứ tự ưu tiê
 ## P1 — Danh mục (Country, City, Vehicle, Regulation)
 | Done | Chức năng | API | Ai dùng | Validation & Quy tắc chính |
 |---|---|---|---|---|
-| [ ] | Danh sách nước theo loại đơn | `GET /api/v1/countries?scope=DOMESTIC\|INTERNATIONAL` | Mọi role | `DOMESTIC`: `homeCountry=true`; `INTERNATIONAL`: `partner=true` & không phải nước sở tại; chỉ `active=true` |
-| [ ] | Danh sách thành phố theo nước | `GET /api/v1/countries/{id}/cities` | Mọi role | Chỉ lấy `active=true` của đúng nước đó |
+| [x] | Danh sách nước theo loại đơn | `GET /api/v1/countries?scope=DOMESTIC\|INTERNATIONAL` | Mọi role | `DOMESTIC`: `homeCountry=true`; `INTERNATIONAL`: `partner=true` & không phải nước sở tại; chỉ `active=true` |
+| [x] | Danh sách thành phố theo nước | `GET /api/v1/countries/{id}/cities` | Mọi role | Chỉ lấy `active=true` của đúng nước đó |
 | [ ] | CRUD Quốc gia / Thành phố | `/api/v1/admin/countries`, `/api/v1/admin/cities` | `LOGISTICS_MANAGER` | `isoCode` 2 chữ in hoa unique; tối đa 1 `homeCountry`; `timezone` hợp lệ (`ZoneId`); city không trùng tên trong 1 nước; soft delete `active=false` |
 | [ ] | CRUD Phương tiện | `/api/v1/vehicles` | `FLEET_COORDINATOR` | `codeOrPlate` unique; `capacityHorses ≥ 1`; không chuyển `MAINTENANCE` khi `IN_USE`; không xóa nếu đã có chuyến |
 | [ ] | CRUD Quy định kiểm dịch | `/api/v1/regulations` | `TRANSPORT_SPECIALIST` | Nước (và `city` nếu có) tồn tại; `requiredDocTypes` không rỗng; `quarantineDays ≥ 0`; `effectiveDate` hợp lệ; soft delete `active=false` |
@@ -147,8 +147,8 @@ Tài liệu theo dõi tiến độ triển khai Backend theo thứ tự ưu tiê
 <!-- AUTO-GENERATED-PROGRESS:START -->
 > Tự động cập nhật bởi `java scripts/SyncDocs.java`.
 
-- **Tiến độ checklist:** `16/62` hạng mục (26%)
-- **Thành phần đã có trong code:** `3` Controllers (`12` endpoints), `5` Services, `3` Repositories
+- **Tiến độ checklist:** `18/62` hạng mục (29%)
+- **Thành phần đã có trong code:** `4` Controllers (`13` endpoints), `7` Services, `5` Repositories
 
 ### Endpoints đã triển khai
 
@@ -162,6 +162,7 @@ Tài liệu theo dõi tiến độ triển khai Backend theo thứ tự ưu tiê
 | `AuthController` | `POST` | `/api/v1/auth/change-password` | `changePassword()` |
 | `AuthController` | `POST` | `/api/v1/auth/forgot-password` | `forgotPassword()` |
 | `AuthController` | `POST` | `/api/v1/auth/reset-password` | `resetPassword()` |
+| `CountryController` | `GET` | `/api/v1/countries/{id}/cities` | `listCities()` |
 | `ProfileController` | `GET` | `/api/v1/profile` | `getProfile()` |
 | `ProfileController` | `PUT` | `/api/v1/profile` | `updateProfile()` |
 | `UserController` | `POST` | `/api/v1/users` | `createUser()` |
