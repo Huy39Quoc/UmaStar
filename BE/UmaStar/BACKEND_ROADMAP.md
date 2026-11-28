@@ -11,8 +11,8 @@ Tài liệu theo dõi tiến độ triển khai Backend theo thứ tự ưu tiê
 |---|---|---|
 | [x] | Đồng bộ package & cấu hình Postgres + Swagger | `umastar.*`, PostgreSQL (`umastar_db`), SpringDoc `3.2.1` |
 | [x] | Cấu hình `.env` & `.env.example` không hardcode | `spring.config.import=optional:file:.env[.properties]` |
-| [x] | Bổ sung Optimistic Locking & field còn thiếu trên Entity | `@Version` (`TransportOrder`, `Trip`, `Vehicle`, `LegalDocument`), `Trip.confirmed`/`confirmedAt`, `HorseConditionLog.photoUrls` |
-| [x] | Thêm `spring-boot-starter-security` + thư viện JWT vào `pom.xml` | Khai báo thêm `JWT_SECRET`, `JWT_ACCESS_EXP_MS`, `JWT_REFRESH_EXP_MS`, `UPLOAD_DIR`, `MAX_FILE_SIZE`, `MAX_REQUEST_SIZE` trong `.env` & `.env.example` |
+| [x] | Bổ sung Optimistic Locking & field còn thiếu trên Entity | `@Version` (`TransportOrder`, `Trip`, `Vehicle`, `LegalDocument`), `Trip.confirmed`/`confirmedAt`, `HorseConditionLog.photoUrls` & `stage` (`HorseConditionStage`), `OrderHorse.preTransportPhotoUrls`/`preTransportNote` |
+| [x] | Thêm `spring-boot-starter-security` + thư viện JWT vào `pom.xml` | Khai báo thêm `JWT_SECRET`, `JWT_ACCESS_EXP_MS`, `JWT_REFRESH_EXP_MS`, `UPLOAD_DIR`, `MAX_FILE_SIZE`, `MAX_REQUEST_SIZE`, `STORAGE_PROVIDER`, `CLOUDINARY_*` trong `.env` & `.env.example` |
 
 ---
 
@@ -22,7 +22,8 @@ Tài liệu theo dõi tiến độ triển khai Backend theo thứ tự ưu tiê
 | Done | Chức năng / Thành phần | API / Vị trí | Ai dùng | Validation & Quy tắc chính |
 |---|---|---|---|---|
 | [x] | Chuẩn hóa Response lỗi & Phân trang | `dto/response`, `GlobalExceptionHandler`, `PageableFactory` | Hệ thống | Trả `{timestamp, status, code, error, message, path, errors{field}}` cho 400, 401, 403, 404, 405, 409, 413, 415, 422, 423; phân trang `page, size (max 100), sort` |
-| [x] | Hạ tầng Upload File | `service/FileStorageService` + `service/impl/FileStorageServiceImpl` | Hệ thống | Lưu local theo `UPLOAD_DIR` (dễ mở rộng S3), whitelist đuôi & MIME + magic bytes, giới hạn dung lượng, đổi tên UUID |
+| [x] | Hạ tầng Upload File (Local) | `service/FileStorageService` + `service/impl/FileStorageServiceImpl` | Hệ thống | Lưu local theo `UPLOAD_DIR`, whitelist đuôi & MIME + magic bytes, giới hạn dung lượng, đổi tên UUID |
+| [ ] | Tích hợp Cloudinary lưu ảnh & API Upload | `CloudinaryFileStorageService`, `POST /api/v1/files/upload` | Đã đăng nhập | Upload ảnh (và file) lên Cloudinary qua `CLOUDINARY_*` khi `STORAGE_PROVIDER=cloudinary`, trả về `secure_url` lưu vào `file_url`/`photo_url`; kiểm tra định dạng & dung lượng |
 | [x] | Cấu hình Security, CORS, JWT Filter & Swagger Bearer | `SecurityConfig`, `CorsConfig`, `JwtAuthenticationFilter`, `JwtService`, `OpenApiConfig` | Hệ thống | Stateless, BCrypt, CORS theo `CORS_ALLOWED_ORIGINS`, trả JSON 401/403, `permitAll` cho `/api/v1/auth/**` (trừ `/logout-all`, `/change-password`) & Swagger UI |
 | [x] | Seed tài khoản mẫu theo từng Role | `DataSeeder`, `SeedProperties` | Hệ thống | Tạo sẵn tài khoản cho từng `Role` cấu hình trong `.env` (kèm `Customer` profile cho `CUSTOMER`) nếu DB chưa có |
 | [x] | Đăng ký khách hàng | `POST /api/v1/auth/register` | Công khai | Email lowercase, unique, ≤ 150 ký tự; mật khẩu 8–72 ký tự (hoa, thường, số); phone VN `(0\|84\|+84)[35789][0-9]{8}`; tạo `User(CUSTOMER)` + `Customer` |
@@ -68,7 +69,7 @@ Tài liệu theo dõi tiến độ triển khai Backend theo thứ tự ưu tiê
 | Done | Chức năng | API | Ai dùng | Validation & Quy tắc chính |
 |---|---|---|---|---|
 | [ ] | State Machine `OrderStatus` | `OrderStateMachine` | Hệ thống | Kiểm soát chuyển trạng thái tập trung, sai trả `409 Conflict` |
-| [ ] | Tạo đơn vận chuyển | `POST /api/v1/orders` | `CUSTOMER` | Tự gán `transportType`; check nước/city/không trùng điểm đi-đến; `requestedArrival > requestedDeparture`; đặt trước tối thiểu N ngày; `horseCount = horses.size() ≥ 1`; ngựa thuộc customer & không trùng lịch đơn khác; sinh `orderCode` |
+| [ ] | Tạo đơn vận chuyển | `POST /api/v1/orders` | `CUSTOMER` | Tự gán `transportType`; check nước/city/không trùng điểm đi-đến; `requestedArrival > requestedDeparture`; đặt trước tối thiểu N ngày; `horseCount = horses.size() ≥ 1`; ngựa thuộc customer & không trùng lịch đơn khác; mỗi ngựa kèm `preTransportPhotoUrls` (URL Cloudinary, 1–5 ảnh/con) & `preTransportNote`; sinh `orderCode` |
 | [ ] | Xem danh sách & chi tiết đơn | `GET /api/v1/orders`, `GET /api/v1/orders/{id}` | `CUSTOMER` (của mình), Nhân viên | Dùng `@EntityGraph`/`JOIN FETCH`; lọc `status`, `transportType`, khoảng ngày, từ khóa |
 | [ ] | Sửa đơn | `PUT /api/v1/orders/{id}` | `CUSTOMER` | Chỉ sửa khi `PENDING`; áp lại toàn bộ validation lúc tạo |
 | [ ] | Hủy đơn | `POST /api/v1/orders/{id}/cancel` | `CUSTOMER`, `LOGISTICS_MANAGER` | Customer hủy khi `PENDING`/`APPROVED`/`DOC_PROCESSING`; từ `READY` chỉ Manager hủy; không hủy từ `IN_TRANSIT`; bắt buộc lý do |
@@ -108,7 +109,7 @@ Tài liệu theo dõi tiến độ triển khai Backend theo thứ tự ưu tiê
 | [ ] | Báo cáo mốc lộ trình | `POST /api/v1/trips/{id}/status-logs` | `DRIVER`, `ESCORT`, `FLEET_COORDINATOR` | Người báo phải được phân công (hoặc Coordinator nhập thay); check thứ tự `stopId`, `CUSTOMS_CLEARED` chỉ tại `CUSTOMS`, `DELIVERED` chỉ tại `DESTINATION`; không trùng trạng thái; `reportedAt` không tương lai (> 5p) & không quá 24h; cập nhật stop + chuyến sang `IN_TRANSIT` |
 | [ ] | Cập nhật tọa độ GPS | `POST /api/v1/trips/{id}/location` | `DRIVER`, `ESCORT` | Chuyến `DEPARTED`/`IN_TRANSIT`; tọa độ hợp lệ; throttle tối thiểu 10 giây/lần; lưu `currentLat`, `currentLng`, `lastLocationAt` |
 | [ ] | Điều chỉnh trạng thái điểm dừng thủ công | `PATCH /api/v1/trips/{id}/stops/{stopId}/status` | `FLEET_COORDINATOR` | Bắt buộc lý do, ghi `TripStatusLog(manual=true)` để truy vết |
-| [ ] | Ghi nhận & xem nhật ký sức khỏe ngựa | `POST/GET /api/v1/trips/{id}/horse-conditions` | `DRIVER`, `ESCORT` (ghi); `CUSTOMER` (đơn mình), Staff (xem) | Ngựa thuộc đơn của chuyến; `NOT_EATING`/`STRESSED` bắt buộc `note`; tối đa 5 ảnh JPG/PNG ≤ 5 MB (`photoUrls`); bất thường → notify Coordinator |
+| [ ] | Ghi nhận & xem nhật ký sức khỏe ngựa | `POST/GET /api/v1/trips/{id}/horse-conditions` | `DRIVER`, `ESCORT` (ghi); `CUSTOMER` (đơn mình), Staff (xem) | Ngựa thuộc đơn của chuyến; chọn `stage` (`PRE_DEPARTURE`, `IN_TRANSIT`, `ON_ARRIVAL`); `NOT_EATING`/`STRESSED` bắt buộc `note`; tối đa 5 ảnh JPG/PNG ≤ 5 MB trên Cloudinary (`photoUrls`); bất thường → notify Coordinator |
 | [ ] | Khách theo dõi lộ trình | `GET /api/v1/orders/{id}/tracking` | `CUSTOMER` (của mình) | Trả điểm dừng, log trạng thái, GPS cuối + `lastLocationAt`, tóm tắt sức khỏe ngựa |
 
 ---
@@ -147,7 +148,7 @@ Tài liệu theo dõi tiến độ triển khai Backend theo thứ tự ưu tiê
 <!-- AUTO-GENERATED-PROGRESS:START -->
 > Tự động cập nhật bởi `java scripts/SyncDocs.java`.
 
-- **Tiến độ checklist:** `20/62` hạng mục (32%)
+- **Tiến độ checklist:** `20/63` hạng mục (32%)
 - **Thành phần đã có trong code:** `7` Controllers (`22` endpoints), `8` Services, `7` Repositories
 
 ### Endpoints đã triển khai

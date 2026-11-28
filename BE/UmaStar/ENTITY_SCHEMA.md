@@ -2,11 +2,12 @@
 
 Tài liệu này giải thích **quan hệ giữa các Entity** và **công dụng của từng thuộc tính** trong hệ thống **Quản lý Vận chuyển Ngựa đua Xuyên Quốc gia (UmaStar)**.
 
-> **Ghi chú chung (`BaseEntity`):**
-> Tất cả 20 entity còn lại đều kế thừa từ `BaseEntity`, nên mặc định đều có 3 cột:
-> - `id` (`UUID`, khóa chính): Định danh duy nhất tự sinh (`GenerationType.UUID`).
-> - `created_at` (`Instant`): Thời điểm tạo bản ghi (tự động gán).
-> - `updated_at` (`Instant`): Thời điểm cập nhật bản ghi gần nhất (tự động cập nhật).
+> **Ghi chú chung (`BaseEntity` & Lưu trữ file/ảnh):**
+> - Tất cả 20 entity còn lại đều kế thừa từ `BaseEntity`, nên mặc định đều có 3 cột:
+>   - `id` (`UUID`, khóa chính): Định danh duy nhất tự sinh (`GenerationType.UUID`).
+>   - `created_at` (`Instant`): Thời điểm tạo bản ghi (tự động gán).
+>   - `updated_at` (`Instant`): Thời điểm cập nhật bản ghi gần nhất (tự động cập nhật).
+> - Các cột lưu ảnh/tệp (`preTransportPhotoUrls`, `photoUrls`, `photoUrl`, `signatureUrl`, `fileUrl` đều `length = 500`) lưu URL từ **Cloudinary** (`https://res.cloudinary.com/...`) khi bật `STORAGE_PROVIDER=cloudinary` (hoặc đường dẫn tương đối khi chạy `local`).
 
 ---
 
@@ -166,11 +167,13 @@ Hồ sơ ngựa đua thuộc sở hữu của khách hàng. Quan hệ **N-1** v�
 - `version`: Số phiên bản Optimistic Locking (`@Version`) chống ghi đè đồng thời.
 
 ### `OrderHorse` (Bảng `order_horses`)
-Bảng trung gian N-N giữa `TransportOrder` và `Horse` (unique theo `order_id + horse_id`).
+Bảng trung gian N-N giữa `TransportOrder` và `Horse` (unique theo `order_id + horse_id`), tách riêng thông tin & ảnh kiểm chứng cho **từng con ngựa** dù cùng nằm trong một đơn hàng.
 - `order`: Đơn vận chuyển.
 - `horse`: Con ngựa được vận chuyển.
 - `stallNumber` (`stall_number`): Số ngăn / số chuồng dự kiến trên phương tiện.
-- `specialNote` (`special_note`): Lưu ý riêng cho từng con ngựa trong đơn này.
+- `specialNote` (`special_note`): Lưu ý chăm sóc riêng cho từng con ngựa trong đơn này (khẩu phần ăn, tính khí...).
+- `preTransportNote` (`pre_transport_note`): Ghi chú tình trạng sức khỏe trước khi vận chuyển do khách hàng khai báo lúc tạo đơn.
+- `preTransportPhotoUrls` (`order_horse_photos`): Danh sách URL ảnh chụp trên **Cloudinary** (tối đa 5 ảnh/con) minh chứng con ngựa này khỏe mạnh trước khi vận chuyển.
 
 ### `LegalDocument` (Bảng `legal_documents`)
 Hồ sơ pháp lý số hóa cho **từng con ngựa trong từng đơn hàng**. Quan hệ **N-1** với `TransportOrder`, `Horse`, `User` (`uploadedBy`, `verifiedBy`).
@@ -256,11 +259,12 @@ Nhật ký cập nhật tiến độ chuyến đi tại từng mốc. Quan hệ 
 - `note`: Ghi chú thêm.
 
 ### `HorseConditionLog` (Bảng `horse_condition_logs`)
-Nhật ký sức khỏe từng con ngựa trong suốt chuyến đi. Quan hệ **N-1** với `Trip`, `Horse`, `User` (`recordedBy`).
+Nhật ký sức khỏe từng con ngựa trong suốt chuyến đi (từ lúc đón ngựa lên xe, dọc đường cho tới khi tới nơi). Quan hệ **N-1** với `Trip`, `Horse`, `User` (`recordedBy`).
 - `trip`, `horse`: Chuyến đi và con ngựa được theo dõi.
+- `stage` (`HorseConditionStage`): Thời điểm ghi nhận (`PRE_DEPARTURE` lúc đón ngựa trước khi xuất phát, `IN_TRANSIT` dọc đường, `ON_ARRIVAL` khi tới nơi).
 - `condition` (`horse_condition`, `HorseCondition`): Trạng thái (`STABLE`, `NOT_EATING`, `STRESSED`, `CLIMATE_CHANGE`).
 - `note`: Mô tả chi tiết của tài xế/nhân viên đi kèm.
-- `photoUrls` (`horse_condition_photos`): Danh sách URL ảnh tình trạng ngựa (tối đa 5 ảnh).
+- `photoUrls` (`horse_condition_photos`): Danh sách URL ảnh tình trạng ngựa trên **Cloudinary** (tối đa 5 ảnh).
 - `recordedBy` (`recorded_by`), `recordedAt` (`recorded_at`): Người ghi nhận và thời điểm.
 
 ### `Incident` (Bảng `incidents`)
@@ -314,7 +318,7 @@ Thông báo gửi tới người dùng (nhắc bổ sung hồ sơ, cập nhật 
 > Phần dưới đây được đồng bộ tự động từ toàn bộ mã nguồn Java bằng lệnh `java scripts/SyncDocs.java`. Không sửa tay trong khối `AUTO-GENERATED`.
 
 <!-- AUTO-GENERATED:START -->
-Cập nhật từ toàn bộ mã nguồn: `src/main/java/umastar/**` (`21` entities/superclasses, `26` enums).
+Cập nhật từ toàn bộ mã nguồn: `src/main/java/umastar/**` (`21` entities/superclasses, `27` enums).
 
 ### Danh sách Entity
 
@@ -394,6 +398,7 @@ Cập nhật từ toàn bộ mã nguồn: `src/main/java/umastar/**` (`21` entit
 |---|---|---|
 | `trip` | `Trip` | @ManyToOne(fetch = FetchType.LAZY, optional = false) @JoinColumn(name = "trip_id", null... |
 | `horse` | `Horse` | @ManyToOne(fetch = FetchType.LAZY, optional = false) @JoinColumn(name = "horse_id", nul... |
+| `stage` | `HorseConditionStage` | @Enumerated(EnumType.STRING) @Column(name = "stage", nullable = false, length = 20) |
 | `condition` | `HorseCondition` | @Enumerated(EnumType.STRING) @Column(name = "horse_condition", nullable = false, length... |
 | `note` | `String` | @Column(columnDefinition = "text") |
 | `photoUrls` | `List<String>` | @Column(name = "photo_url", length = 500) |
@@ -457,7 +462,9 @@ Cập nhật từ toàn bộ mã nguồn: `src/main/java/umastar/**` (`21` entit
 | `order` | `TransportOrder` | @ManyToOne(fetch = FetchType.LAZY, optional = false) @JoinColumn(name = "order_id", nul... |
 | `horse` | `Horse` | @ManyToOne(fetch = FetchType.LAZY, optional = false) @JoinColumn(name = "horse_id", nul... |
 | `stallNumber` | `String` | @Column(name = "stall_number", length = 20) |
-| `specialNote` | `String` | @Column(name = "special_note", columnDefinition = "text") |
+| `specialNote` | `String` | Ghi chú chăm sóc đặc biệt dành riêng cho con ngựa này trong đơn (khẩu phần ăn, tính khí...). — @Column(name = "special_note", columnDefinition = "text") |
+| `preTransportNote` | `String` | Ghi chú tình trạng sức khỏe trước khi vận chuyển do khách hàng khai báo lúc tạo đơn. — @Column(name = "pre_transport_note", columnDefinition = "text") |
+| `preTransportPhotoUrls` | `List<String>` | @Column(name = "photo_url", nullable = false, length = 500) |
 
 #### `RefreshToken` — Bảng: `refresh_tokens`
 | Field | Kiểu | Ghi chú / Annotation |
@@ -633,8 +640,9 @@ Cập nhật từ toàn bộ mã nguồn: `src/main/java/umastar/**` (`21` entit
 | `CustomerType` | `CLUB`, `INDIVIDUAL` |
 | `DocType` | `VACCINATION_CERT`, `HORSE_PASSPORT`, `EXPORT_PERMIT`, `IMPORT_PERMIT`, `HEALTH_CERT`, `OTHER` |
 | `ErrorCode` | `INVALID_CREDENTIALS`, `"Email`, `HttpStatus.UNAUTHORIZED)`, `UNAUTHORIZED`, `"Vui`, `HttpStatus.UNAUTHORIZED)`, `FORBIDDEN`, `"Bạn`, `HttpStatus.FORBIDDEN)`, `ACCOUNT_LOCKED`, `"Tài`, `HttpStatus.LOCKED)`, `ACCOUNT_DISABLED`, `"Tài`, `HttpStatus.FORBIDDEN)`, `INVALID_TOKEN`, `"Phiên`, `HttpStatus.UNAUTHORIZED)`, `TOKEN_EXPIRED`, `"Phiên`, `HttpStatus.UNAUTHORIZED)`, `INVALID_REFRESH_TOKEN`, `"Phiên`, `HttpStatus.UNAUTHORIZED)`, `REFRESH_TOKEN_REVOKED`, `"Phiên`, `HttpStatus.UNAUTHORIZED)`, `INVALID_RESET_TOKEN`, `"Mã`, `HttpStatus.BAD_REQUEST)`, `USER_NOT_FOUND`, `"Không`, `HttpStatus.NOT_FOUND)`, `EMAIL_ALREADY_EXISTS`, `"Email`, `HttpStatus.CONFLICT)`, `INVALID_STAFF_ROLE`, `"Vai`, `HttpStatus.BAD_REQUEST)`, `CANNOT_DEACTIVATE_SELF`, `"Bạn`, `HttpStatus.CONFLICT)`, `LAST_MANAGER_PROTECTED`, `"Không`, `HttpStatus.CONFLICT)`, `INVALID_OLD_PASSWORD`, `"Mật`, `HttpStatus.BAD_REQUEST)`, `NEW_PASSWORD_SAME_AS_OLD`, `"Mật`, `HttpStatus.BAD_REQUEST)`, `PASSWORD_MISMATCH`, `"Mật`, `HttpStatus.BAD_REQUEST)`, `FILE_TOO_LARGE`, `"File`, `HttpStatus.valueOf`, `UNSUPPORTED_FILE_TYPE`, `"Định`, `HttpStatus.UNSUPPORTED_MEDIA_TYPE)`, `INVALID_FILE_NAME`, `"Tên`, `HttpStatus.BAD_REQUEST)`, `FILE_NOT_FOUND`, `"Không`, `HttpStatus.NOT_FOUND)`, `FILE_STORAGE_ERROR`, `"Không`, `vui`, `HttpStatus.INTERNAL_SERVER_ERROR)`, `INTERNAL_SERVER_ERROR`, `"Lỗi`, `vui`, `HttpStatus.INTERNAL_SERVER_ERROR)`, `INVALID_REQUEST`, `"Yêu`, `HttpStatus.BAD_REQUEST)`, `VALIDATION_FAILED`, `"Dữ`, `HttpStatus.BAD_REQUEST)`, `METHOD_NOT_ALLOWED`, `"Phương`, `HttpStatus.METHOD_NOT_ALLOWED)`, `UNSUPPORTED_MEDIA_TYPE`, `"Content-Type`, `HttpStatus.UNSUPPORTED_MEDIA_TYPE)`, `RESOURCE_NOT_FOUND`, `"Không`, `HttpStatus.NOT_FOUND)`, `CONCURRENT_UPDATE`, `"Dữ`, `HttpStatus.CONFLICT)`, `DATA_INTEGRITY_VIOLATION`, `"Dữ`, `HttpStatus.CONFLICT)`, `RESOURCE_IN_USE`, `"Dữ`, `HttpStatus.CONFLICT)`, `INVALID_STATE_TRANSITION`, `"Không`, `HttpStatus.CONFLICT)`, `BUSINESS_RULE_VIOLATION`, `"Vi`, `HttpStatus.valueOf`, `TOO_MANY_REQUESTS`, `"Thao`, `vui`, `HttpStatus.TOO_MANY_REQUESTS)`, `COUNTRY_NOT_FOUND`, `"Không`, `HttpStatus.NOT_FOUND)`, `COUNTRY_CODE_ALREADY_EXISTS`, `"Mã`, `HttpStatus.CONFLICT)`, `HOME_COUNTRY_ALREADY_EXISTS`, `"Hệ`, `HttpStatus.CONFLICT)`, `CITY_NOT_FOUND`, `"Không`, `HttpStatus.NOT_FOUND)`, `CITY_NAME_ALREADY_EXISTS`, `"Tên`, `HttpStatus.CONFLICT)`, `CITY_NOT_IN_COUNTRY`, `"Thành`, `HttpStatus.BAD_REQUEST)`, `INVALID_TIMEZONE`, `"Múi`, `HttpStatus.BAD_REQUEST)`, `COUNTRY_NOT_PARTNER`, `"Quốc`, `HttpStatus.BAD_REQUEST)`, `VEHICLE_NOT_FOUND`, `"Không`, `HttpStatus.NOT_FOUND)`, `VEHICLE_CODE_ALREADY_EXISTS`, `"Biển`, `HttpStatus.CONFLICT)`, `VEHICLE_IN_USE`, `"Phương`, `HttpStatus.CONFLICT)`, `VEHICLE_NOT_AVAILABLE`, `"Phương`, `HttpStatus.CONFLICT)`, `REGULATION_NOT_FOUND`, `"Không`, `HttpStatus.NOT_FOUND)`, `REGULATION_DOCS_REQUIRED`, `"Quy`, `HttpStatus.BAD_REQUEST)`, `CUSTOMER_NOT_FOUND`, `"Không`, `HttpStatus.NOT_FOUND)`, `HORSE_NOT_FOUND`, `"Không`, `HttpStatus.NOT_FOUND)`, `MICROCHIP_ALREADY_EXISTS`, `"Số`, `HttpStatus.CONFLICT)`, `HORSE_IN_ACTIVE_ORDER`, `"Ngựa`, `HttpStatus.CONFLICT)`, `NOTIFICATION_NOT_FOUND`, `"Không`, `HttpStatus.NOT_FOUND)` |
-| `FileCategory` | `/**`, `10`, `EnumSet.of`, `AllowedFileType.JPEG`, `AllowedFileType.PNG))`, `/**`, `anh`, `anh`, `5`, `6).`, `5`, `EnumSet.of`, `AllowedFileType.PNG))`, `/**`, `2`, `EnumSet.of`, `AllowedFileType.PNG))` |
+| `FileCategory` | `/**`, `10`, `EnumSet.of`, `AllowedFileType.JPEG`, `AllowedFileType.PNG))`, `/**`, `anh`, `su`, `ban`, `5`, `EnumSet.of`, `AllowedFileType.PNG))`, `/**`, `2`, `EnumSet.of`, `AllowedFileType.PNG))` |
 | `HorseCondition` | `STABLE`, `NOT_EATING`, `STRESSED`, `CLIMATE_CHANGE` |
+| `HorseConditionStage` | `/**`, `/**`, `/**` |
 | `HorseSex` | `STALLION`, `MARE`, `GELDING`, `COLT`, `FILLY` |
 | `IncidentStatus` | `OPEN`, `HANDLING`, `RESOLVED` |
 | `IncidentType` | `VEHICLE_BREAKDOWN`, `TRAFFIC_JAM`, `HORSE_MEDICAL`, `BAD_WEATHER`, `BORDER_CONGESTION` |

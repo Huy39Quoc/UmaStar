@@ -12,7 +12,7 @@ public enum FileCategory {
 
     /** Giay to phap ly (Flow 2). */
     DOCUMENT("documents", 10, EnumSet.of(AllowedFileType.PDF, AllowedFileType.JPEG, AllowedFileType.PNG)),
-    /** Anh nhat ky suc khoe ngua, anh su co, anh ban giao (Flow 4, 5, 6). */
+    /** Anh ngua truoc van chuyen (Flow 1), anh nhat ky suc khoe (Flow 4), su co (Flow 5), ban giao (Flow 6). */
     IMAGE("images", 5, EnumSet.of(AllowedFileType.JPEG, AllowedFileType.PNG)),
     /** Chu ky nguoi nhan khi ban giao (Flow 6). */
     SIGNATURE("signatures", 2, EnumSet.of(AllowedFileType.JPEG, AllowedFileType.PNG));

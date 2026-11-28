@@ -23,13 +23,17 @@ public class HorseConditionLog extends BaseEntity {
     private Horse horse;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "stage", nullable = false, length = 20)
+    private HorseConditionStage stage = HorseConditionStage.IN_TRANSIT;
+
+    @Enumerated(EnumType.STRING)
     @Column(name = "horse_condition", nullable = false, length = 20)
     private HorseCondition condition;
 
     @Column(columnDefinition = "text")
     private String note;
 
-    /** Danh sách ảnh tình trạng ngựa (tối đa 5 ảnh). */
+    /** Danh sách URL ảnh tình trạng ngựa (Cloudinary, tối đa 5 ảnh). */
     @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "horse_condition_photos",
             joinColumns = @JoinColumn(name = "log_id"))

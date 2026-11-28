@@ -1,11 +1,11 @@
 package umastar.storage;
 
 /**
- * Ket qua luu file.
- * @param path         duong dan TUONG DOI so voi thu muc upload (vd documents/2026/11/<uuid>.pdf) - luu vao cot file_url
- * @param originalName ten file goc nguoi dung tai len (chi de hien thi)
- * @param contentType  MIME da duoc xac thuc theo noi dung file
- * @param size         dung luong (byte)
+ * Kết quả lưu file.
+ * @param path         đường dẫn lưu trong DB ({@code file_url} / {@code photo_url}): URL Cloudinary {@code https://...} hoặc đường dẫn tương đối local
+ * @param originalName tên file gốc người dùng tải lên (chỉ để hiển thị)
+ * @param contentType  MIME đã được xác thực theo nội dung file
+ * @param size         dung lượng (byte)
  */
 public record StoredFile(String path, String originalName, String contentType, long size) {
 }

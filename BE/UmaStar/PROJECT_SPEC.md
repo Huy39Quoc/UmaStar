@@ -40,7 +40,7 @@
 - Gửi báo cáo sự cố khẩn cấp (Hỏng xe, Kẹt xe kéo dài, Sự cố y tế của ngựa) về trung tâm điều hành.
 
 ### 5. Customer (Khách hàng - CLB / Chủ ngựa)
-- Tạo yêu cầu đặt dịch vụ vận chuyển ngựa đua (Địa điểm đi/đến, Thời gian, Số lượng ngựa, Yêu cầu đặc biệt).
+- Tạo yêu cầu đặt dịch vụ vận chuyển ngựa đua (Địa điểm đi/đến, Thời gian, Số lượng ngựa, Yêu cầu đặc biệt) kèm ảnh minh chứng tình trạng khỏe mạnh của **từng con ngựa** trước khi vận chuyển (lưu qua Cloudinary).
 - Tải lên các giấy tờ lý lịch và hồ sơ y tế của ngựa theo yêu cầu của đơn vị vận chuyển.
 - Theo dõi tiến độ vị trí chuyến đi và trạng thái cập nhật theo từng chặng thời gian thực.
 - Nhận thông báo khi ngựa hoàn tất thông quan hoặc đã tới địa điểm bàn giao an toàn.
@@ -133,6 +133,7 @@
 | `umastar.enums` | `enum` | [`CustomerType`](src/main/java/umastar/enums/CustomerType.java) | - |
 | `umastar.enums` | `enum` | [`DocType`](src/main/java/umastar/enums/DocType.java) | - |
 | `umastar.enums` | `enum` | [`HorseCondition`](src/main/java/umastar/enums/HorseCondition.java) | - |
+| `umastar.enums` | `enum` | [`HorseConditionStage`](src/main/java/umastar/enums/HorseConditionStage.java) | Thời điểm ghi nhận nhật ký tình trạng sức khỏe ngựa trên chuyến đi. |
 | `umastar.enums` | `enum` | [`HorseSex`](src/main/java/umastar/enums/HorseSex.java) | - |
 | `umastar.enums` | `enum` | [`IncidentStatus`](src/main/java/umastar/enums/IncidentStatus.java) | - |
 | `umastar.enums` | `enum` | [`IncidentType`](src/main/java/umastar/enums/IncidentType.java) | - |
@@ -187,7 +188,7 @@
 | `umastar.service.impl` | `class` | [`VehicleServiceImpl`](src/main/java/umastar/service/impl/VehicleServiceImpl.java) | `@Service` |
 | `umastar.storage` | `enum` | [`AllowedFileType`](src/main/java/umastar/storage/AllowedFileType.java) | Cac dinh dang file duoc phep. Kiem tra 3 lop: duoi file, MIME khai bao, va quan trong nhat la "chu ky" (magic bytes) o dau file, vi duoi va MIME do client tu khai bao nen co the gia mao. |
 | `umastar.storage` | `enum` | [`FileCategory`](src/main/java/umastar/storage/FileCategory.java) | Loai file nghiep vu: quyet dinh thu muc luu, dung luong toi da va dinh dang cho phep. Gioi han o day KHONG duoc lon hon MAX_FILE_SIZE trong .env (Spring chan truoc khi toi day). |
-| `umastar.storage` | `record` | [`StoredFile`](src/main/java/umastar/storage/StoredFile.java) | Ket qua luu file. @param path duong dan TUONG DOI so voi thu muc upload (vd documents/2026/11/<uuid>.pdf) - luu vao cot file_url @param originalName ten file goc nguoi dung tai len (chi de hien thi) @param contentType MIME da duoc xac thuc theo noi dung file @param size dung luong (byte) |
+| `umastar.storage` | `record` | [`StoredFile`](src/main/java/umastar/storage/StoredFile.java) | Kết quả lưu file. @param path đường dẫn lưu trong DB ({@code file_url} / {@code photo_url}): URL Cloudinary {@code https://...} hoặc đường dẫn tương đối local @param originalName tên file gốc người dùng tải lên (chỉ để hiển thị) @param contentType MIME đã được xác thực theo nội dung file @param size dung lượng (byte) |
 | `umastar.util` | `class` | [`InputNormalizer`](src/main/java/umastar/util/InputNormalizer.java) | Chuẩn hóa chuỗi đầu vào dùng chung cho các DTO request. |
 | `umastar.util` | `class` | [`PageableFactory`](src/main/java/umastar/util/PageableFactory.java) | - |
 | `umastar.util` | `class` | [`PasswordPolicy`](src/main/java/umastar/util/PasswordPolicy.java) | Chinh sach mat khau dung chung (seed Manager, dang ky, doi mat khau, dat lai mat khau): 8 ky tu tro len, co chu hoa, chu thuong, chu so, va toi da 72 byte (gioi han cua BCrypt). |
